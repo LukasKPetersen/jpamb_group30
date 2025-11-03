@@ -122,9 +122,9 @@ def null_query(body_node):
     )
     found = find_captures(null_q, body_node, "null")
     if found:
-        log.debug("Null pointer found")
+        log.debug("Null literal found")
     else:
-        log.debug("No null pointer found")
+        log.debug("No null literal found")
     return found
 
 def array_access_query(body_node):
