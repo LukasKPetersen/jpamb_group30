@@ -24,6 +24,7 @@ def class_query(tree, class_name):
     )
 
     for node in tree_sitter.QueryCursor(class_q).captures(tree.root_node)["class"]:
+        log.debug("Found class '%s' in range: %s", class_name, node.range)
         return node
 
     log.error(f"FAIL: Could not find a class of name '{class_name}'")
@@ -65,24 +66,99 @@ def method_query(class_node, method_name, method_params):
             log.debug(f"Parameter text: {tp.text}")
             log.debug(f"Expected type: {tn}")
         else:
+            log.debug("Found method '%s' in range: %s", method_name, node.range)
             return node
     else:
         log.warning(f"FAIL: could not find a method of name {method_name} in the class")
         sys.exit(-1)
 
+def find_captures(query, node, query_name):
+    return any(
+        capture_name == query_name
+        for capture_name, _ in tree_sitter.QueryCursor(query).captures(node).items()
+    )
 
 def assert_query(body_node):
     assert_q = tree_sitter.Query(JAVA_LANGUAGE, """(assert_statement) @assert""")
+    found = find_captures(assert_q, body_node, "assert")
+    if found:
+        log.debug("Assertion found")
+    else:
+        log.debug("No assertion found")
+    return found
 
-    return any(
-        capture_name == "assert"
-        for capture_name, _ in tree_sitter.QueryCursor(assert_q).captures(body_node).items()
-    )
-
-def divide_query(body_node):
+def division_query(body_node):
     divide_q = tree_sitter.Query(JAVA_LANGUAGE, """(binary_expression operator: "/") @divide""")
+    found = find_captures(divide_q, body_node, "divide")
+    if found:
+        log.debug("Division found")
+    else:
+        log.debug("No division found")
+    return found
 
-    return any(
-        capture_name == "divide"
-        for capture_name, _ in tree_sitter.QueryCursor(divide_q).captures(body_node).items()
+def out_of_bounds_query(body_node):
+    oob_q = tree_sitter.Query(
+        JAVA_LANGUAGE,
+        """
+        (method_invocation
+            name: (identifier) @method-name
+            arguments: (argument_list) @args
+            (#match? @method-name "get|set|add|remove")) @oob
+        """,
     )
+    found = find_captures(oob_q, body_node, "oob")
+    if found:
+        log.debug("Out of bounds access found")
+    else:
+        log.debug("No out of bounds access found")
+    return found
+
+def null_query(body_node):
+    null_q = tree_sitter.Query(
+        JAVA_LANGUAGE,
+        """
+        (null_literal) @null
+        """,
+    )
+    found = find_captures(null_q, body_node, "null")
+    if found:
+        log.debug("Null pointer found")
+    else:
+        log.debug("No null pointer found")
+    return found
+
+def array_access_query(body_node):
+    array_q = tree_sitter.Query(
+        JAVA_LANGUAGE,
+        """
+        (array_access) @array
+        """,
+    )
+    found = find_captures(array_q, body_node, "array")
+    if found:
+        log.debug("Array access found")
+    else:
+        log.debug("No array access found")
+    return found
+
+def loop_query(body_node):
+    for_q = tree_sitter.Query(
+        JAVA_LANGUAGE,
+        """
+        (for_statement) @for
+        """,
+    )
+    while_q = tree_sitter.Query(
+        JAVA_LANGUAGE,
+        """
+        (while_statement) @while
+        """,
+    )
+    found_for = find_captures(for_q, body_node, "for")
+    found_while = find_captures(while_q, body_node, "while")
+    if found_for or found_while:
+        log.debug("Loop found")
+        return True
+    else:
+        log.debug("No loop found")
+        return False

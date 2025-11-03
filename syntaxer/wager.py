@@ -19,19 +19,19 @@ class Wager:
     inf: float
 
     def __init__(self):
-        self.ok = 0.5
-        self.divide_by_zero = 0.1
-        self.assertion_error = 0.1
-        self.out_of_bounds = 0.1
-        self.null_pointer = 0.1
         self.inf = 0.1
+        self.assertion_error = 0.1
+        self.divide_by_zero = 0.1
+        self.null_pointer = 0.1
+        self.ok = 0.6
+        self.out_of_bounds = 0.1
 
     def print_wager(self):
         print(
-            f"ok;{self.ok*100}%\n"
-            f"divide by zero;{self.divide_by_zero*100}%\n"
-            f"assertion error;{self.assertion_error*100}%\n"
-            f"out of bounds;{self.out_of_bounds*100}%\n"
-            f"null pointer;{self.null_pointer*100}%\n"
-            f"*;{self.inf*100}%"
+            f"*;{self.inf*100:.0f}%\n"
+            f"assertion error;{self.assertion_error*100:.0f}%\n"
+            f"divide by zero;{self.divide_by_zero*100:.0f}%\n"
+            f"null pointer;{self.null_pointer*100:.0f}%\n"
+            f"ok;{self.ok*100:.0f}%\n"
+            f"out of bounds;{self.out_of_bounds*100:.0f}%"
         )

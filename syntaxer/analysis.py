@@ -37,13 +37,11 @@ wager = wager.Wager()
 ## Class query
 simple_classname = str(methodid.classname.name)
 class_node = query.class_query(tree, simple_classname)
-log.debug("Found class '%s' in range: %s", simple_classname, class_node.range)
 
 ## Method query
 method_name = methodid.extension.name
 method_params = methodid.extension.params
 method_node = query.method_query(class_node, method_name, method_params)
-log.debug("Found method '%s' in range: %s", method_name, method_node.range)
 
 # extract body
 body = method_node.child_by_field_name("body")
@@ -54,20 +52,24 @@ for t in body.text.splitlines():
 log.debug("---- End method body ----")
 
 ## Assert query
-if query.assert_query(body):
-    log.debug("Found assertion")
-    wager.assertion_error = 0.8
-else:
-    log.debug("No assertion")
-    wager.assertion_error = 0.2
+wager.assertion_error = 0.8 if query.assert_query(body) else 0.1
 
 ## Division query
-if query.divide_query(body):
-    log.debug("Found division")
-    wager.divide_by_zero = 0.8
+wager.divide_by_zero = 0.7 if query.division_query(body) else 0.01
+
+## Null query
+wager.null_pointer = 0.8 if query.null_query(body) else 0.1
+
+## Array query
+array_access = query.array_access_query(body)
+if array_access:
+    wager.out_of_bounds = 0.8
+    wager.divide_by_zero = 0.6 # why does this work? 
 else:
-    log.debug("No division")
-    wager.divide_by_zero = 0.2
+    wager.out_of_bounds = 0.1
+
+## Loop query
+wager.inf = 0.7 if query.loop_query(body) else 0.1
 
 ## Print wager
 wager.print_wager()
