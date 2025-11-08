@@ -40,24 +40,38 @@ method_name = methodid.extension.name
 method_params = methodid.extension.params
 method_node = query.method_query(class_node, method_name, method_params)
 
+#### Find interesting input values ####
+# extract input parameters
+input_params = method_node.child_by_field_name("parameters")
+assert input_params and input_params.text
+log.debug("")
+log.debug("------ Input parameters ------")
+for t in input_params.text.splitlines():
+    log.debug("line: %s", t.decode())
+log.debug("")
+
+# query input parameters
+input_params = query.input_value_query(input_params)
+param_dict = {}
+for i, val in enumerate(input_params, start=1):
+    log.debug("input parameter %d: %s", i, val)
+    param_dict[val] = []
+
 # extract body
 body = method_node.child_by_field_name("body")
 assert body and body.text
+log.debug("")
 log.debug("------ Method body ------")
 for t in body.text.splitlines():
     log.debug("line: %s", t.decode())
 log.debug("---- End method body ----")
 
-## Find interesting input values
+# static integers
 static_integers = query.static_integer_query(body)
-if static_integers:
-    log.debug("---- Static integers ----")
-    for integer in static_integers:
-        log.debug("integer: %s", integer.text.decode())
-else:
-    log.debug("No static integers found")
+for integer in static_integers:
+    log.debug("integer: %s", integer)
 
-
+log.debug("")
 
 printwager = False
 if printwager:

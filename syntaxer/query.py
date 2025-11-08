@@ -78,15 +78,36 @@ def find_captures(query, node, query_name):
         for capture_name, _ in tree_sitter.QueryCursor(query).captures(node).items()
     )
 
+def find_all_captures(query, node, query_name):
+    captures = tree_sitter.QueryCursor(query).captures(node)
+    return captures.get(query_name, [])
+
+def input_value_query(node):
+    input_q = tree_sitter.Query(JAVA_LANGUAGE, """(formal_parameter) @input""")
+    found = find_all_captures(input_q, node, "input")
+    if found:
+        log.debug("Input values found")
+        # Extract input parameter names from nodes
+        input_params = [param.child_by_field_name("name").text.decode('utf-8') for param in found]
+        return input_params
+    else:
+        log.debug("No input values found")
+        return []
+
 def static_integer_query(body_node):
-    int_q = tree_sitter.Query(JAVA_LANGUAGE, """(integer_literal) @int""")
-    found = find_captures(int_q, body_node, "int")
+    int_q = tree_sitter.Query(JAVA_LANGUAGE, """(decimal_integer_literal) @int""")
+    found = find_all_captures(int_q, body_node, "int")
     if found:
         log.debug("Static integers found")
+        # Extract integer values from nodes
+        integer_values = [int(node.text.decode('utf-8')) for node in found]
+        return integer_values
     else:
         log.debug("No static integers found")
-    return found
+        return []
 
+
+#### Other queries ####
 def assert_query(body_node):
     assert_q = tree_sitter.Query(JAVA_LANGUAGE, """(assert_statement) @assert""")
     found = find_captures(assert_q, body_node, "assert")
