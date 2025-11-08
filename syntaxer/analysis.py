@@ -31,9 +31,6 @@ with open(srcfile, "rb") as f:
     log.debug("Parse sourcefile: %s", srcfile)
     tree = parser.parse(f.read())
 
-## Create wager
-wager = wager.Wager()
-
 ## Class query
 simple_classname = str(methodid.classname.name)
 class_node = query.class_query(tree, simple_classname)
@@ -51,27 +48,43 @@ for t in body.text.splitlines():
     log.debug("line: %s", t.decode())
 log.debug("---- End method body ----")
 
-## Assert query
-wager.assertion_error = 0.8 if query.assert_query(body) else 0.1
-
-## Division query
-wager.divide_by_zero = 0.7 if query.division_query(body) else 0.01
-
-## Null query
-wager.null_pointer = 0.8 if query.null_query(body) else 0.1
-
-## Array query
-array_access = query.array_access_query(body)
-if array_access:
-    wager.out_of_bounds = 0.8
-    wager.divide_by_zero = 0.6 # why does this work? 
+## Find interesting input values
+static_integers = query.static_integer_query(body)
+if static_integers:
+    log.debug("---- Static integers ----")
+    for integer in static_integers:
+        log.debug("integer: %s", integer.text.decode())
 else:
-    wager.out_of_bounds = 0.1
+    log.debug("No static integers found")
 
-## Loop query
-wager.inf = 0.7 if query.loop_query(body) else 0.1
 
-## Print wager
-wager.print_wager()
+
+printwager = False
+if printwager:
+    ## Create wager
+    wager = wager.Wager()
+
+    ## Assert query
+    wager.assertion_error = 0.8 if query.assert_query(body) else 0.1
+
+    ## Division query
+    wager.divide_by_zero = 0.7 if query.division_query(body) else 0.01
+
+    ## Null query
+    wager.null_pointer = 0.8 if query.null_query(body) else 0.1
+
+    ## Array query
+    array_access = query.array_access_query(body)
+    if array_access:
+        wager.out_of_bounds = 0.8
+        wager.divide_by_zero = 0.6 # why does this work? 
+    else:
+        wager.out_of_bounds = 0.1
+
+    ## Loop query
+    wager.inf = 0.7 if query.loop_query(body) else 0.1
+
+    ## Print wager
+    wager.print_wager()
 
 sys.exit(0)

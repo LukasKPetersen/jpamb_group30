@@ -78,6 +78,15 @@ def find_captures(query, node, query_name):
         for capture_name, _ in tree_sitter.QueryCursor(query).captures(node).items()
     )
 
+def static_integer_query(body_node):
+    int_q = tree_sitter.Query(JAVA_LANGUAGE, """(integer_literal) @int""")
+    found = find_captures(int_q, body_node, "int")
+    if found:
+        log.debug("Static integers found")
+    else:
+        log.debug("No static integers found")
+    return found
+
 def assert_query(body_node):
     assert_q = tree_sitter.Query(JAVA_LANGUAGE, """(assert_statement) @assert""")
     found = find_captures(assert_q, body_node, "assert")
