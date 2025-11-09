@@ -442,7 +442,7 @@ for i, v in enumerate(input.values):
 
 state.frames.push(frame)
 
-for x in range(1000):
+for x in range(100000):
     state = step(state)
     if isinstance(state, str):
         print(state)
