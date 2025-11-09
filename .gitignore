@@ -24,4 +24,4 @@ build/
 .hypothesis
 leananalyzer
 
-.DS_Store
+result
