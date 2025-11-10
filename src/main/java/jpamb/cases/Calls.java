@@ -2,7 +2,11 @@ package jpamb.cases;
 
 import jpamb.utils.Case;
 import jpamb.utils.Tag;
-import static jpamb.utils.Tag.TagType.*;
+import static jpamb.utils.Tag.TagType.ARRAY;
+import static jpamb.utils.Tag.TagType.CALL;
+import static jpamb.utils.Tag.TagType.INTEGER_OVERFLOW;
+import static jpamb.utils.Tag.TagType.LOOP;
+import static jpamb.utils.Tag.TagType.RECURSION;
 
 public class Calls {
 
@@ -20,6 +24,24 @@ public class Calls {
     } else {
       assertFalse();
     }
+  }
+
+  public static void assertIfNested(boolean b1, boolean b2) {
+    if (b1) {
+      if (b2) {
+        assertTrue();
+        return;
+      }
+      assertFalse();
+    }
+  }
+
+  @Case("(true, true) -> ok")
+  @Case("(true, false) -> assertion error")
+  @Case("(false, false) -> ok")
+  @Case("(false, true) -> ok")
+  public static void callsAssertIfNested(boolean b1, boolean b2) {
+    assertIfNested(b1, b2);
   }
 
   @Case("() -> ok")
@@ -52,8 +74,7 @@ public class Calls {
       return i;
     return fib(i - 1) + fib(i - 2);
   }
-
-
+  
   @Case("(8) -> ok")
   @Case("(0) -> assertion error")
   @Tag({ CALL, RECURSION })
@@ -85,6 +106,7 @@ public class Calls {
     return primeArray;
   }
 
+  // When using input of 100 many iterations are required!
   @Case("(100) -> ok")
   @Case("(0) -> out of bounds")
   @Case("(-1) -> assertion error")

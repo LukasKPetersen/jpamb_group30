@@ -75,7 +75,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 7,
+            "line": 11,
             "offset": 0
           }
         ],
@@ -111,7 +111,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 11,
+            "line": 15,
             "offset": 0
           }
         ],
@@ -192,11 +192,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 14,
+            "line": 18,
             "offset": 0
           },
           {
-            "line": 15,
+            "line": 19,
             "offset": 6
           }
         ],
@@ -284,19 +284,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 18,
+            "line": 22,
             "offset": 0
           },
           {
-            "line": 19,
+            "line": 23,
             "offset": 2
           },
           {
-            "line": 21,
+            "line": 25,
             "offset": 4
           },
           {
-            "line": 23,
+            "line": 27,
             "offset": 5
           }
         ],
@@ -317,6 +317,294 @@
       "exceptions": [],
       "name": "assertIf",
       "params": [
+        {
+          "annotations": [],
+          "type": {
+            "annotations": [],
+            "base": "boolean"
+          },
+          "visible": true
+        }
+      ],
+      "returns": {
+        "annotations": [],
+        "type": null
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "index": 0,
+            "offset": 0,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "condition": "eq",
+            "offset": 1,
+            "opr": "ifz",
+            "target": 7
+          },
+          {
+            "index": 1,
+            "offset": 4,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "condition": "eq",
+            "offset": 5,
+            "opr": "ifz",
+            "target": 6
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "assertTrue",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Calls"
+              },
+              "returns": null
+            },
+            "offset": 8,
+            "opr": "invoke"
+          },
+          {
+            "offset": 11,
+            "opr": "return",
+            "type": null
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "assertFalse",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Calls"
+              },
+              "returns": null
+            },
+            "offset": 12,
+            "opr": "invoke"
+          },
+          {
+            "offset": 15,
+            "opr": "return",
+            "type": null
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 30,
+            "offset": 0
+          },
+          {
+            "line": 31,
+            "offset": 2
+          },
+          {
+            "line": 32,
+            "offset": 4
+          },
+          {
+            "line": 33,
+            "offset": 5
+          },
+          {
+            "line": 35,
+            "offset": 6
+          },
+          {
+            "line": 37,
+            "offset": 7
+          }
+        ],
+        "max_locals": 2,
+        "max_stack": 1,
+        "stack_map": [
+          {
+            "index": 6,
+            "type": "same"
+          },
+          {
+            "index": 7,
+            "type": "same"
+          }
+        ]
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "assertIfNested",
+      "params": [
+        {
+          "annotations": [],
+          "type": {
+            "annotations": [],
+            "base": "boolean"
+          },
+          "visible": true
+        },
+        {
+          "annotations": [],
+          "type": {
+            "annotations": [],
+            "base": "boolean"
+          },
+          "visible": true
+        }
+      ],
+      "returns": {
+        "annotations": [],
+        "type": null
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Cases",
+          "values": {
+            "value": {
+              "type": "array",
+              "value": [
+                {
+                  "type": "annotation",
+                  "value": {
+                    "type": "jpamb/utils/Case",
+                    "values": {
+                      "value": {
+                        "type": "string",
+                        "value": "(true, true) -> ok"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "annotation",
+                  "value": {
+                    "type": "jpamb/utils/Case",
+                    "values": {
+                      "value": {
+                        "type": "string",
+                        "value": "(true, false) -> assertion error"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "annotation",
+                  "value": {
+                    "type": "jpamb/utils/Case",
+                    "values": {
+                      "value": {
+                        "type": "string",
+                        "value": "(false, false) -> ok"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "annotation",
+                  "value": {
+                    "type": "jpamb/utils/Case",
+                    "values": {
+                      "value": {
+                        "type": "string",
+                        "value": "(false, true) -> ok"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "index": 0,
+            "offset": 0,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 1,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [
+                "boolean",
+                "boolean"
+              ],
+              "is_interface": false,
+              "name": "assertIfNested",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Calls"
+              },
+              "returns": null
+            },
+            "offset": 2,
+            "opr": "invoke"
+          },
+          {
+            "offset": 5,
+            "opr": "return",
+            "type": null
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 44,
+            "offset": 0
+          },
+          {
+            "line": 45,
+            "offset": 3
+          }
+        ],
+        "max_locals": 2,
+        "max_stack": 2,
+        "stack_map": null
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "callsAssertIfNested",
+      "params": [
+        {
+          "annotations": [],
+          "type": {
+            "annotations": [],
+            "base": "boolean"
+          },
+          "visible": true
+        },
         {
           "annotations": [],
           "type": {
@@ -376,11 +664,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 27,
+            "line": 49,
             "offset": 0
           },
           {
-            "line": 28,
+            "line": 50,
             "offset": 1
           }
         ],
@@ -463,11 +751,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 33,
+            "line": 55,
             "offset": 0
           },
           {
-            "line": 34,
+            "line": 56,
             "offset": 1
           }
         ],
@@ -583,11 +871,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 40,
+            "line": 62,
             "offset": 0
           },
           {
-            "line": 41,
+            "line": 63,
             "offset": 2
           }
         ],
@@ -689,11 +977,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 46,
+            "line": 68,
             "offset": 0
           },
           {
-            "line": 47,
+            "line": 69,
             "offset": 2
           }
         ],
@@ -909,19 +1197,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 50,
+            "line": 72,
             "offset": 0
           },
           {
-            "line": 51,
+            "line": 73,
             "offset": 8
           },
           {
-            "line": 52,
+            "line": 74,
             "offset": 13
           },
           {
-            "line": 53,
+            "line": 75,
             "offset": 15
           }
         ],
@@ -1130,11 +1418,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 61,
+            "line": 82,
             "offset": 0
           },
           {
-            "line": 62,
+            "line": 83,
             "offset": 10
           }
         ],
@@ -1596,71 +1884,71 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 65,
+            "line": 86,
             "offset": 0
           },
           {
-            "line": 66,
+            "line": 87,
             "offset": 8
           },
           {
-            "line": 67,
+            "line": 88,
             "offset": 11
           },
           {
-            "line": 68,
+            "line": 89,
             "offset": 15
           },
           {
-            "line": 70,
+            "line": 91,
             "offset": 19
           },
           {
-            "line": 71,
+            "line": 92,
             "offset": 22
           },
           {
-            "line": 72,
+            "line": 93,
             "offset": 24
           },
           {
-            "line": 73,
+            "line": 94,
             "offset": 38
           },
           {
-            "line": 74,
+            "line": 95,
             "offset": 46
           },
           {
-            "line": 75,
+            "line": 96,
             "offset": 53
           },
           {
-            "line": 72,
+            "line": 93,
             "offset": 54
           },
           {
-            "line": 78,
+            "line": 99,
             "offset": 56
           },
           {
-            "line": 79,
+            "line": 100,
             "offset": 58
           },
           {
-            "line": 80,
+            "line": 101,
             "offset": 62
           },
           {
-            "line": 82,
+            "line": 103,
             "offset": 63
           },
           {
-            "line": 83,
+            "line": 104,
             "offset": 64
           },
           {
-            "line": 85,
+            "line": 106,
             "offset": 65
           }
         ],
@@ -2079,19 +2367,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 93,
+            "line": 115,
             "offset": 0
           },
           {
-            "line": 94,
+            "line": 116,
             "offset": 15
           },
           {
-            "line": 93,
+            "line": 115,
             "offset": 23
           },
           {
-            "line": 96,
+            "line": 118,
             "offset": 25
           }
         ],
@@ -2226,7 +2514,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 7,
+            "line": 11,
             "offset": 0
           }
         ],

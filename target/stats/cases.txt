@@ -23,6 +23,10 @@ jpamb.cases.Calls.callsAssertFib:(I)V                        (0) -> assertion er
 jpamb.cases.Calls.callsAssertFib:(I)V                        (8) -> ok
 jpamb.cases.Calls.callsAssertIf:(Z)V                         (false) -> assertion error
 jpamb.cases.Calls.callsAssertIf:(Z)V                         (true) -> ok
+jpamb.cases.Calls.callsAssertIfNested:(ZZ)V                  (false, false) -> ok
+jpamb.cases.Calls.callsAssertIfNested:(ZZ)V                  (false, true) -> ok
+jpamb.cases.Calls.callsAssertIfNested:(ZZ)V                  (true, false) -> assertion error
+jpamb.cases.Calls.callsAssertIfNested:(ZZ)V                  (true, true) -> ok
 jpamb.cases.Calls.callsAssertIfWithTrue:()V                  () -> ok
 jpamb.cases.Calls.callsAssertTrue:()V                        () -> ok
 jpamb.cases.Loops.forever:()V                                () -> *
