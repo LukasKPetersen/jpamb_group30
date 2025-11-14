@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypeVar, Generic
+from typing import TypeVar
 
 from solutions.interpreter import Stack
 from sign_abstraction import sign_abstraction

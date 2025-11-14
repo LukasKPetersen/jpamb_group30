@@ -11,7 +11,7 @@ class SignSet:
         return "{" + ", ".join(sorted(self.signs)) + "}"
 
     # ordering relation (to make into Partially Ordered Set - Poset)
-    def is_subset_of(self, other: "SignSet") -> bool:
+    def __le__(self, other: "SignSet") -> bool:
         return self.signs.issubset(other.signs)
     
     # join operator (for lattice functionality)
@@ -27,9 +27,9 @@ class SignSet:
         signset = set()
         if 0 in items:
             signset.add("0")
-        if all(x > 0 for x in items):
+        if any(x > 0 for x in items):
             signset.add("+")
-        if all(x < 0 for x in items):
+        if any(x < 0 for x in items):
             signset.add("-")
         return cls(signset)
     
@@ -59,8 +59,12 @@ class Arithmetic:
     
     @staticmethod
     def add_signsets(xs: SignSet, ys: SignSet) -> SignSet:
-        result_signs = set()
-        result_signs.update(Arithmetic.add(x, y).signs for x in xs.signs for y in ys.signs)
+        result_signs: set[Sign] = set()
+        # compute all pairwise additions and accumulate their sign results
+        for x in xs.signs:
+            for y in ys.signs:
+                sum_signset = Arithmetic.add(x, y)  # returns a SignSet
+                result_signs.update(sum_signset.signs)  # merge the inner signs
         return SignSet(result_signs)
 
     @staticmethod
@@ -176,13 +180,3 @@ class Comparison:
             return Comparison.lt(a, b)
         else:
             raise ValueError("Unsupported comparison operation.")
-    
-    @staticmethod
-    def compare_signsets(op: str, xs: SignSet, ys: SignSet) -> set[bool]:
-        result = set()
-        result.update(Comparison.compare(op, x, y) for x in xs.signs for y in ys.signs)
-        return result
-    
-    @staticmethod
-    def compare_signsets(op: str, xs: SignSet, ys: SignSet) -> set[bool]:
-        return Comparison.compare(op, xs, ys)
