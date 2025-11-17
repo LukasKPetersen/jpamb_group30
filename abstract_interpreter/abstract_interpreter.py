@@ -6,7 +6,7 @@ import sign_abstraction
 
 import sys
 from loguru import logger
-from typing import Dict, Set, Any
+from typing import Set
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}")
@@ -14,86 +14,24 @@ logger.add(sys.stderr, format="[{level}] {message}")
 methodid, input = jpamb.getcase()
 print(f"This is the methodid: {methodid}\nThis is the input: {input}")
 
-# for now: written by copilot
 @dataclass
-class aPC:
-    """Mapping from program counters (PC) to sets of states (AState or str)."""
-    mapping: Dict[Any, Set[Any]]
+class PC:
+    method: jvm.AbsMethodID
+    offset: int
 
-    @classmethod
-    def empty(cls) -> "aPC":
-        return cls({})
+    def __iadd__(self, delta):
+        self.offset += delta
+        return self
 
-    def __getitem__(self, pc: Any) -> Set[Any]:
-        return self.mapping.get(pc, set())
+    def __add__(self, delta):
+        return PC(self.method, self.offset + delta)
+    
+    def set(self, delta):
+        self.offset = delta
+        return self
 
-    def keys(self):
-        return self.mapping.keys()
-
-    def __le__(self, other: "aPC") -> bool:
-        """
-        Pointwise ordering: self <= other iff for every pc and every state s in self[pc]
-        there exists a state t in other[pc] with s <= t (if s supports <=), or s == t
-        for non-comparable values (e.g. strings).
-        """
-        for pc, states in self.mapping.items():
-            other_states = other.mapping.get(pc, set())
-            if not other_states:
-                return False
-            for s in states:
-                if isinstance(s, str):
-                    # compare error/terminal states by equality
-                    if s not in other_states:
-                        return False
-                    continue
-
-                # find some t in other_states such that s <= t
-                found = False
-                for t in other_states:
-                    if isinstance(t, str):
-                        continue
-                    try:
-                        if s <= t:
-                            found = True
-                            break
-                    except Exception:
-                        # fallback to equality if no __le__ implemented
-                        if s == t:
-                            found = True
-                            break
-                if not found:
-                    return False
-        return True
-
-    def __and__(self, other: "aPC") -> "aPC":
-        """
-        Meet operator: pointwise union of state-sets (as specified).
-        """
-        keys = set(self.mapping.keys()) | set(other.mapping.keys())
-        new_map: Dict[Any, Set[Any]] = {}
-        for k in keys:
-            new_map[k] = set(self.mapping.get(k, set())) | set(other.mapping.get(k, set()))
-        return aPC(new_map)
-
-    def __or__(self, other: "aPC") -> "aPC":
-        """
-        Join operator: pointwise intersection of state-sets (dual to meet above).
-        """
-        keys = set(self.mapping.keys()) & set(other.mapping.keys())
-        new_map: Dict[Any, Set[Any]] = {}
-        for k in keys:
-            new_map[k] = set(self.mapping.get(k, set())) & set(other.mapping.get(k, set()))
-        return aPC(new_map)
-
-    # convenience aliases
-    def meet(self, other: "aPC") -> "aPC":
-        return self.__and__(other)
-
-    def join(self, other: "aPC") -> "aPC":
-        return self.__or__(other)
-
-    def __str__(self) -> str:
-        return "{" + ", ".join(f"{k}: {v}" for k, v in self.mapping.items()) + "}"
+    def __str__(self):
+        return f"{self.method}:{self.offset}"
 
 
 @dataclass
@@ -169,66 +107,104 @@ class PerVarFrame[AV]:
             locals={var_id: self.locals[var_id] | other.locals[var_id] for var_id in self.locals},
             stack=self.stack | other.stack
         )
-    
-    # helper function for clearer use of the "join" operation
-    def join(self, other: "PerVarFrame[AV]") -> "PerVarFrame[AV]":
-        return self.__or__(other)
 
     def __str__(self):
         locals = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
         return f"<{{{locals}}}, {self.stack}>"
 
-
 @dataclass
 class AState:
-    heap: dict[int, jvm.Value] # TODO: should this be in the abstract interpreter too?
-    frames: Stack[PerVarFrame]
+    frames: Stack[PerVarFrame[AV]]
 
+    @classmethod
+    def initialstate_from_method(cls, methodid: jvm.AbsMethodID) -> "StateSet[AState]":
+        initial_frame = PerVarFrame.abstract(methodid)
+        initial_state = cls(frames=Stack([initial_frame]))
+        initial_pc = PC(method=methodid, offset=0)
+        return StateSet(per_inst={initial_pc: initial_state}, needswork={initial_pc})
+
+@dataclass
+class StateSet[AState]:
+    per_inst : dict[PC, AState]
+    needswork : set[PC]
+
+    def per_instruction(self):
+        for pc in self.needswork: 
+            yield (pc, self.per_inst[pc])
+
+    # sts |= astate
+    def __ior__(self, astate):
+        old = self.per_inst[astate] 
+        self.per_inst[astate.pc] |= astate
+        if old != self.per_inst[astate.pc]:
+            self.needswork.add(astate.pc)
+    
     def __str__(self):
-        return f"{self.heap} {self.frames}"
+        return "{" + ", ".join(f"{pc}: {state}" for pc, state in self.per_inst.items()) + "}"
 
 # abstract stepping function
 def step(state: AState) -> Iterable[AState | str]:
-    assert isinstance(state, AState), f"expected frame but got {state}"
     frame = state.frames.peek()
     opr = bc[frame.pc]
     logger.debug(f"STEP {opr}\n{state}")
     match opr:
-        case jvm.Ifz(condition=c, target=t):
-            # TODO: implement abstract interpretation for Ifz
-            pass
+        case jvm.Ifz(condition=con, target=target):
+            for ([va1], after) in state.group(pop=[jvm.Int()]):
+                for res in after.binary(con, va1, 0):
+                    match res:
+                        case (True, after):
+                            after.frame.update(pc=target)  # deleted a `yield`
+                        case (False, after):
+                            after.frame.update(pc=pc+1)  # deleted a `yield`
+                        case err:
+                            err  # deleted a `yield`
         case a:
             a.help()
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
-def many_step(state: dict[PC, AState | str]) -> dict[PC, AState | str]:
-    new_state = dict()
-    for k, v in state.items():
-        for s in step(v):
-            if s.pc in new_state:
-                new_state[s.pc] = new_state[s.pc].join(s)
-            else:
-                new_state[s.pc] = s
-    return new_state
+def manystep(sts : StateSet[AState]) -> Iterable[AState | str]:
+    return
 
-frame = PerVarFrame.abstract(methodid)
-state = AState({}, Stack.empty())
+# perform abstract interpretation
+MAX_STEPS = 100
+final = {}
+sts = AState.initialstate_from_method(methodid) # TODO: better naming - ´sts´ refer to set of states
+for i in range(MAX_STEPS):
+    for s in manystep(sts):
+        if isinstance(s, str):
+            final.add(s)
+        else:
+            sts |= s
+logger.info(f"The following final states {final} is possible in {MAX_STEPS}")
 
-for i, v in enumerate(input.values):
-    # We have to sort between types in the input and where we store them
-    # Primitives can go directly into the locals array
-    # Objects and arrays go into the heap
+# grouping per instruction (§2.1)
+for pc, state in sts.per_instruction():
+    match bc[pc]:
+        case jvm.Binary(type=jvm.Int(), operant=opr):
+            match opr:
+                case jvm.Add():
+                    pass
+                case _:
+                    raise NotImplementedError(f"Don't know how to handle: {opr!r}")
+        case _:
+            raise NotImplementedError(f"Don't know how to handle: {bc[pc]!r}")
 
-    if isinstance(v.type, (jvm.Array | jvm.Object)):
-        heap_length = len(state.heap)
-        # Create a reference of the object
-        ref = jvm.Value(jvm.Reference(), heap_length)
-        # insert value in heap and reference in locals
-        state.heap[ref.value] = v
-        frame.locals[i] = ref
-    else:
-        frame.locals[i] = v
+# grouping per variable (§2.2)
+for ([va1, va2], after) in state.group(pop=[jvm.Int(), jvm.Int()]):
+    match (va1, va2):
+        case (sign_abstraction.SignSet(), sign_abstraction.SignSet()):
+            result = sign_abstraction.Arithmetic.add_signsets(va1, va2)
+            assert isinstance(result, sign_abstraction.SignSet)
+            after.stack.push(result)
+        case _:
+            raise NotImplementedError(f"Don't know how to handle: {va1!r}, {va2!r}")
+        
+# doing the operation (§2.3)
 
-state.frames.push(frame)
-
-many_step({PC(methodid, 0): state})
+# if the result is not a failure, we update the state with the new value, using an update method.
+for res in after.binary(opr, va1, va2):
+    match res:
+        case (va3, after):
+            after.frame.update(push=[va3], pc=pc+1)  # deleted a `yield`
+        case err:
+            err  # deleted a `yield`

@@ -41,6 +41,18 @@ class SignSet:
         if (member < 0 and "-" in self.signs): 
             return True
         return False
+    
+    def __add__(self, other: "SignSet") -> "SignSet":
+        return Arithmetic.add_signsets(self, other)
+    
+    def __sub__(self, other: "SignSet") -> "SignSet":
+        return Arithmetic.subtract_signsets(self, other)
+    
+    def __mul__(self, other: "SignSet") -> "SignSet":
+        return Arithmetic.multiply_signsets(self, other)
+    
+    def __truediv__(self, other: "SignSet") -> "SignSet":
+        return Arithmetic.divide_signsets(self, other)
 
 class Arithmetic:
     @staticmethod
