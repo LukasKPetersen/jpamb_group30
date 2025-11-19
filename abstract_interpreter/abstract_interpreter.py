@@ -175,7 +175,7 @@ def step(state: AState) -> Iterable[AState | str]:
     
     match opr:
         case jvm.Get(field=f, static=s):
-            # Get field value - for now, just push a placeholder
+            # For abstract interpretation, we can just push a placeholder value
             new_frames = Stack([PerVarFrame(
                 locals=dict(state.frames.peek().locals),
                 stack=Stack(state.frames.peek().stack.items[:])
@@ -218,43 +218,19 @@ def step(state: AState) -> Iterable[AState | str]:
             yield false_state
         case jvm.Return():
             # Return from method - final state
-            yield "RETURN"
-        case jvm.Push(type=typ, value=val):
-            # Push a constant value onto the stack
+            yield "ok"
+        case jvm.Load(type=typ, index=idx):
+            # Load from local variable onto stack
             frame = state.frames.peek()
+            if idx not in frame.locals:
+                yield "ERROR: Local variable not found on Load"
+                return
+            val = frame.locals[idx]
             new_frames = Stack([PerVarFrame(
                 locals=dict(frame.locals),
                 stack=Stack(frame.stack.items[:])
             )])
             new_frames.peek().stack.push(val)
-            new_state = AState(frames=new_frames, pc=pc + 1)
-            yield new_state
-        case jvm.Load(type=typ, index=idx):
-            # Load local variable onto stack
-            frame = state.frames.peek()
-            if idx not in frame.locals:
-                yield f"ERROR: Local variable {idx} not found"
-                return
-            new_frames = Stack([PerVarFrame(
-                locals=dict(frame.locals),
-                stack=Stack(frame.stack.items[:])
-            )])
-            new_frames.peek().stack.push(frame.locals[idx])
-            new_state = AState(frames=new_frames, pc=pc + 1)
-            yield new_state
-        case jvm.Store(type=typ, index=idx):
-            # Pop from stack and store in local variable
-            frame = state.frames.peek()
-            if not frame.stack:
-                yield "ERROR: Empty stack on Store"
-                return
-            val = frame.stack.peek()
-            new_locals = dict(frame.locals)
-            new_locals[idx] = val
-            new_frames = Stack([PerVarFrame(
-                locals=new_locals,
-                stack=Stack(frame.stack.items[:-1])
-            )])
             new_state = AState(frames=new_frames, pc=pc + 1)
             yield new_state
         case jvm.Binary(type=typ, operator=op):
@@ -273,19 +249,7 @@ def step(state: AState) -> Iterable[AState | str]:
             new_frames.peek().stack.push(f"({val1} {op} {val2})")
             new_state = AState(frames=new_frames, pc=pc + 1)
             yield new_state
-        case jvm.Invoke(method=method, virtual=virt):
-            # Method invocation - for now, just skip it
-            logger.warning(f"Method invocation not fully implemented: {method}")
-            frame = state.frames.peek()
-            # Just continue without modification
-            new_frames = Stack([PerVarFrame(
-                locals=dict(frame.locals),
-                stack=Stack(frame.stack.items[:])
-            )])
-            new_state = AState(frames=new_frames, pc=pc + 1)
-            yield new_state
         case _:
-            # For now, just skip unknown instructions
             logger.warning(f"Unhandled opcode: {opr!r}")
             yield f"ERROR: Unhandled opcode {opr!r}"
 
@@ -313,38 +277,3 @@ else:
 
 logger.info(f"The following final states {final} are possible")
 logger.info(f"Total states explored: {len(sts.per_inst)}")
-
-# The following sections are examples/templates from the paper and should be
-# integrated into the step() function as needed:
-
-# # grouping per instruction (§2.1)
-# for pc, state in sts.per_instruction():
-#     match bc[pc]:
-#         case jvm.Binary(type=jvm.Int(), operant=opr):
-#             match opr:
-#                 case jvm.Add():
-#                     pass
-#                 case _:
-#                     raise NotImplementedError(f"Don't know how to handle: {opr!r}")
-#         case _:
-#             raise NotImplementedError(f"Don't know how to handle: {bc[pc]!r}")
-
-# # grouping per variable (§2.2)
-# for ([va1, va2], after) in state.group(pop=[jvm.Int(), jvm.Int()]):
-#     match (va1, va2):
-#         case (sign_abstraction.SignSet(), sign_abstraction.SignSet()):
-#             result = sign_abstraction.Arithmetic.add_signsets(va1, va2)
-#             assert isinstance(result, sign_abstraction.SignSet)
-#             after.stack.push(result)
-#         case _:
-#             raise NotImplementedError(f"Don't know how to handle: {va1!r}, {va2!r}")
-        
-# # doing the operation (§2.3)
-
-# # if the result is not a failure, we update the state with the new value, using an update method.
-# for res in after.binary(opr, va1, va2):
-#     match res:
-#         case (va3, after):
-#             after.frame.update(push=[va3], pc=pc+1)  # deleted a `yield`
-#         case err:
-#             err  # deleted a `yield`
