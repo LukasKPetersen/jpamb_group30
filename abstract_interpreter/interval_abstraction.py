@@ -1,12 +1,20 @@
 from dataclasses import dataclass
 from typing import TypeAlias
+from typing import Iterable
 
 @dataclass
 class Interval:
     lower: int
     upper: int
-    # TODO: a better alternative than `list[int]`?
-    K: TypeAlias = list[int]  # A set containing all the constants of the program
+    # K is the set of all constants of the program (`frozenset` is used to ensure uniqueness)
+    K: frozenset[int] = frozenset()
+
+    def init_K(self, vals: Iterable[int]):
+        self.K = frozenset(sorted(vals))
+
+    def add_to_K(self, val: int):
+        Ks = self.K | frozenset([val])
+        self.K = frozenset(sorted(Ks))
 
     @classmethod
     def empty(cls) -> "Interval":
@@ -73,11 +81,10 @@ class Interval:
     def widening(self, other: "Interval") -> "Interval":
         """Widening operator to ensure convergence in fixpoint computations"""
         
-        def min_K_J(a: int, b: int, Ks: list[int]) -> int:
+        def min_K_J(a: int, b: int, Ks: frozenset[int]) -> int:
             """Function to return the largest element in K that is less than min(a,b)"""
             # assume that K is a sorted set
-            Ks = Ks | self.empty()
-            ret = Ks[0]
+            ret = next(iter(Ks))
             for k in Ks:
                 if k > min(a, b):
                     return ret
@@ -85,15 +92,14 @@ class Interval:
                     ret = k
             return ret
         
-        def max_K_J(a: int, b: int, Ks: list[int]) -> int:
+        def max_K_J(a: int, b: int, Ks: frozenset[int]) -> int:
             """Function to return the smallest element in K that is greater than max(a,b)"""
             # assume that K is a sorted set
-            Ks = Ks | self.empty()
             for k in Ks:
                 if k >= max(a, b):
                     return k
-            return Ks[-1]
-        
+            return next(iter(reversed(sorted(Ks))))
+
         if self.is_empty:
             return other
         if other.is_empty:
@@ -106,3 +112,7 @@ class Arithmetic:
     @staticmethod
     def add(a: Interval, b: Interval) -> Interval:
         return Interval(a.lower + b.lower, a.upper + b.upper)
+    
+    @staticmethod
+    def sub(a: Interval, b: Interval) -> Interval:
+        return Interval(a.lower - b.upper, a.upper - b.lower)

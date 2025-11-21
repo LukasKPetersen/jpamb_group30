@@ -93,15 +93,15 @@ class PerVarFrame[AV]:
     # meet operator (for lattice functionality)
     def __and__(self, other: "PerVarFrame[AV]") -> "PerVarFrame[AV]":
         return PerVarFrame(
-            locals={var_id: self.locals[var_id] & other.locals[var_id] for var_id in self.locals},
-            stack=self.stack & other.stack
+            locals={var_id: self.locals[var_id] and other.locals[var_id] for var_id in self.locals},
+            stack=self.stack and other.stack
         )
     
     # join operator (for lattice functionality)
     def __or__(self, other: "PerVarFrame[AV]") -> "PerVarFrame[AV]":
         return PerVarFrame(
-            locals={var_id: self.locals[var_id] | other.locals[var_id] for var_id in self.locals},
-            stack=self.stack | other.stack
+            locals={var_id: self.locals[var_id] or other.locals[var_id] for var_id in self.locals},
+            stack=self.stack or other.stack
         )
 
     def __str__(self):
@@ -110,7 +110,7 @@ class PerVarFrame[AV]:
 
 @dataclass
 class AState:
-    frames: Stack[PerVarFrame[AV]]
+    frames: Stack[PerVarFrame]
     pc: PC
 
     def __or__(self, other: "AState") -> "AState":
@@ -118,14 +118,7 @@ class AState:
         if self.pc != other.pc:
             raise ValueError("Cannot join states at different program points")
         
-        # For now, simple implementation - should join frames
-        # In a more sophisticated implementation, would need to join corresponding frames
-        return self  # Placeholder - needs proper implementation
-    
-    def __eq__(self, other: "AState") -> bool:
-        """Equality check for states"""
-        return (self.pc == other.pc and 
-                str(self.frames) == str(other.frames))  # Simple comparison
+        return self  # TODO: needs proper implementation
 
     @classmethod
     def initialstate_from_method(cls, methodid: jvm.AbsMethodID) -> "StateSet":
