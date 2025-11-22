@@ -121,8 +121,10 @@ class AState:
         return self  # TODO: needs proper implementation
 
     @classmethod
-    def initialstate_from_method(cls, methodid: jvm.AbsMethodID) -> "StateSet":
-        initial_frame = PerVarFrame.abstract(methodid)
+    def initialstate_from_method(cls, methodid: jvm.AbsMethodID, input_values: tuple = ()) -> "StateSet":
+        # Initialize locals with input parameters
+        initial_locals = {i: input_values[i] for i in range(len(input_values))}
+        initial_frame = PerVarFrame(locals=initial_locals, stack=Stack.empty())
         initial_pc = PC(method=methodid, offset=0)
         initial_state = cls(frames=Stack([initial_frame]), pc=initial_pc)
         return StateSet(per_inst={initial_pc: initial_state}, needswork={initial_pc})
@@ -168,79 +170,333 @@ def step(state: AState) -> Iterable[AState | str]:
     
     match opr:
         case jvm.Get(field=f, static=s):
-            # For abstract interpretation, we can just push a placeholder value
-            new_frames = Stack([PerVarFrame(
-                locals=dict(state.frames.peek().locals),
-                stack=Stack(state.frames.peek().stack.items[:])
-            )])
-            new_frames.peek().stack.push(f"FIELD({f})")
-            new_state = AState(frames=new_frames, pc=pc + 1)
+            # We assume that the field only has one '.'
+            s = str(f).split('.')
+            assert len(s) == 2, "There is not 1 '.' in the field string, opr: get"
+            if (s[1] == "$assertionsDisabled:Z"):
+                # We always assume assertions are enabled
+                frame = state.frames.peek()
+                new_stack = Stack(frame.stack.items + [jvm.Value(type=jvm.Int(), value=0)])
+                new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+                new_frames = Stack(state.frames.items[:-1] + [new_frame])
+                new_pc = pc + 1
+                new_state = AState(frames=new_frames, pc=new_pc)
+                yield new_state
+            else:
+                raise NotImplementedError(f"For jvm.Get in the stepping function. Do not know how to handle: {f}")
+        case jvm.Goto(target=t):
+            # An unconditional jump to offset = target
+            # Create new state with updated PC
+            new_pc = PC(pc.method, t)
+            new_state = AState(frames=state.frames, pc=new_pc)
             yield new_state
-        case jvm.Ifz(condition=con, target=target):
-            # Pop value from stack and branch based on condition
+        case jvm.New(classname=c):
+            if c._as_string == "java/lang/AssertionError":
+                yield "assertion error"
+            else:
+                raise NotImplementedError(f"jvm.New case not handled yet!")
+        case jvm.Ifz(condition=c, target=t):
+            # Conditional branch - explore BOTH paths for abstract interpretation
             frame = state.frames.peek()
-            if not frame.stack:
-                yield "ERROR: Empty stack on Ifz"
+            
+            # Pop value from stack for both branches
+            if not frame.stack.items:
+                return
+            v = frame.stack.items[-1]
+            new_stack_items = frame.stack.items[:-1]
+            
+            # For abstract interpretation, we explore both branches
+            # This ensures soundness - we don't miss any possible execution paths
+            new_stack = Stack(new_stack_items)
+            new_frame = PerVarFrame(locals=frame.locals.copy(), stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            
+            # Always yield jump branch
+            jump_pc = PC(pc.method, t)
+            jump_state = AState(frames=new_frames, pc=jump_pc)
+            yield jump_state
+            
+            # Always yield fall-through branch
+            fall_pc = pc + 1
+            fall_state = AState(frames=new_frames, pc=fall_pc)
+            yield fall_state
+        case jvm.If(condition=c, target=t):
+            # Condition between two values - explore BOTH branches for abstract interpretation
+            frame = state.frames.peek()
+            
+            if len(frame.stack.items) < 2:
                 return
             
-            # Pop the value from the stack
-            stack_copy = Stack(frame.stack.items[:-1])  # All but last item
-            va1 = frame.stack.peek()
+            value2_obj = frame.stack.items[-1]
+            value1_obj = frame.stack.items[-2]
+            new_stack_items = frame.stack.items[:-2]
             
-            # Create state after pop
-            after_frame = PerVarFrame(
-                locals=dict(frame.locals),
-                stack=stack_copy
+            # For abstract interpretation, we explore both branches
+            # This ensures soundness - we don't miss any possible execution paths
+            new_stack = Stack(new_stack_items)
+            new_frame = PerVarFrame(locals=frame.locals.copy(), stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            
+            # Always yield jump branch
+            jump_pc = PC(pc.method, t)
+            jump_state = AState(frames=new_frames, pc=jump_pc)
+            yield jump_state
+            
+            # Always yield fall-through branch
+            fall_pc = pc + 1
+            fall_state = AState(frames=new_frames, pc=fall_pc)
+            yield fall_state
+        case jvm.ArrayLength():
+            # Note: ArrayLength appears twice in original code - this is the first occurrence
+            # For abstract interpretation without heap, we'll skip this for now
+            raise NotImplementedError("ArrayLength requires heap abstraction")
+        case jvm.New(classname=c):
+            if str(c) == "java/lang/AssertionError":
+                # Just advance PC for AssertionError creation
+                new_pc = pc + 1
+                new_state = AState(frames=state.frames, pc=new_pc)
+                yield new_state
+            else:
+                raise NotImplementedError(f"For jvm.New in the stepping function. Do not know how to handle: {c}")
+        case jvm.Dup(words=words):
+            frame = state.frames.peek()
+            if not frame.stack.items:
+                return
+            v = frame.stack.items[-1]
+            new_stack = Stack(frame.stack.items + [v])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Push(value=v):
+            frame = state.frames.peek()
+            new_stack = Stack(frame.stack.items + [v])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Store(type=jvm.Int(), index=idx):
+            frame = state.frames.peek()
+            if not frame.stack.items:
+                return
+            v = frame.stack.items[-1]
+            assert v.type == jvm.Int(), f"Wrong type for istore. Found {v}"
+            
+            new_stack = Stack(frame.stack.items[:-1])
+            new_locals = frame.locals.copy()
+            new_locals[idx] = v
+            new_frame = PerVarFrame(locals=new_locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Store(type=jvm.Reference(), index=idx):
+            frame = state.frames.peek()
+            if not frame.stack.items:
+                return
+            ref = frame.stack.items[-1]
+            assert ref.type == jvm.Reference(), (
+                "Store requires the popped stack object to be of type Reference or returnAddress"
             )
             
-            # For abstract interpretation, we need to consider both branches
-            # Branch 1: condition is true (jump to target)
-            true_frames = Stack([PerVarFrame(
-                locals=dict(after_frame.locals),
-                stack=Stack(after_frame.stack.items[:])
-            )])
-            true_state = AState(frames=true_frames, pc=PC(pc.method, target))
-            yield true_state
-            
-            # Branch 2: condition is false (continue to next instruction)
-            false_frames = Stack([PerVarFrame(
-                locals=dict(after_frame.locals),
-                stack=Stack(after_frame.stack.items[:])
-            )])
-            false_state = AState(frames=false_frames, pc=pc + 1)
-            yield false_state
-        case jvm.Return():
-            # Return from method - final state
-            yield "ok"
-        case jvm.Load(type=typ, index=idx):
-            # Load from local variable onto stack
-            frame = state.frames.peek()
-            if idx not in frame.locals:
-                yield "ERROR: Local variable not found on Load"
-                return
-            val = frame.locals[idx]
-            new_frames = Stack([PerVarFrame(
-                locals=dict(frame.locals),
-                stack=Stack(frame.stack.items[:])
-            )])
-            new_frames.peek().stack.push(val)
-            new_state = AState(frames=new_frames, pc=pc + 1)
+            new_stack = Stack(frame.stack.items[:-1])
+            new_locals = frame.locals.copy()
+            new_locals[idx] = ref
+            new_frame = PerVarFrame(locals=new_locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
-        case jvm.Binary(type=typ, operator=op):
-            # Binary operation (pop two values, push result)
+        case jvm.ArrayStore(type=jvm.Int()):
+            # ArrayStore requires heap abstraction
+            raise NotImplementedError("ArrayStore requires heap abstraction")
+        case jvm.ArrayLength():
+            # Second ArrayLength - requires heap abstraction
+            raise NotImplementedError("ArrayLength requires heap abstraction")
+        case jvm.ArrayLoad(type=t):
+            # ArrayLoad requires heap abstraction
+            raise NotImplementedError("ArrayLoad requires heap abstraction")
+        case jvm.Load(type=(jvm.Int() | jvm.Reference()), index=i):
+            frame = state.frames.peek()
+            if i not in frame.locals:
+                return
+            v = frame.locals[i]
+            new_stack = Stack(frame.stack.items + [v])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Div):
             frame = state.frames.peek()
             if len(frame.stack.items) < 2:
-                yield "ERROR: Not enough values on stack for binary operation"
                 return
-            val2 = frame.stack.items[-1]
-            val1 = frame.stack.items[-2]
-            # For now, just push a placeholder result
-            new_frames = Stack([PerVarFrame(
-                locals=dict(frame.locals),
-                stack=Stack(frame.stack.items[:-2])
-            )])
-            new_frames.peek().stack.push(f"({val1} {op} {val2})")
-            new_state = AState(frames=new_frames, pc=pc + 1)
+            v2 = frame.stack.items[-1]
+            v1 = frame.stack.items[-2]
+            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
+            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+            
+            if v2.value == 0:
+                yield "divide by zero"
+            else:
+                result = jvm.Value.int(v1.value // v2.value)
+                new_stack = Stack(frame.stack.items[:-2] + [result])
+                new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+                new_frames = Stack(state.frames.items[:-1] + [new_frame])
+                new_pc = pc + 1
+                new_state = AState(frames=new_frames, pc=new_pc)
+                yield new_state
+        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Sub):
+            frame = state.frames.peek()
+            if len(frame.stack.items) < 2:
+                return
+            v2 = frame.stack.items[-1]
+            v1 = frame.stack.items[-2]
+            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
+            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+            result = jvm.Value.int(v1.value - v2.value)
+            new_stack = Stack(frame.stack.items[:-2] + [result])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Add):
+            frame = state.frames.peek()
+            if len(frame.stack.items) < 2:
+                return
+            v2 = frame.stack.items[-1]
+            v1 = frame.stack.items[-2]
+            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
+            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+            result = jvm.Value.int(v1.value + v2.value)
+            new_stack = Stack(frame.stack.items[:-2] + [result])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Mul):
+            frame = state.frames.peek()
+            if len(frame.stack.items) < 2:
+                return
+            v2 = frame.stack.items[-1]
+            v1 = frame.stack.items[-2]
+            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
+            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+            result = jvm.Value.int(v1.value * v2.value)
+            new_stack = Stack(frame.stack.items[:-2] + [result])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Rem):
+            frame = state.frames.peek()
+            if len(frame.stack.items) < 2:
+                return
+            v2 = frame.stack.items[-1]
+            v1 = frame.stack.items[-2]
+            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
+            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+            result = jvm.Value.int(v1.value % v2.value)
+            new_stack = Stack(frame.stack.items[:-2] + [result])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Cast(from_=f, to_=t):
+            frame = state.frames.peek()
+            if not frame.stack.items:
+                return
+            v = frame.stack.items[-1]
+            match t:
+                case jvm.Short():
+                    # i2s - convert int to short and sign-extend back to int
+                    pass
+                case _:
+                    raise NotImplementedError("Case not implemented, opr: jvm.Cast()")
+            # Stack unchanged for i2s
+            new_pc = pc + 1
+            new_state = AState(frames=state.frames, pc=new_pc)
+            yield new_state
+        case jvm.Incr(index=idx, amount=n):
+            frame = state.frames.peek()
+            if idx not in frame.locals:
+                return
+            v = frame.locals[idx]
+            assert v.type is jvm.Int(), f"expected int, but got {v}"
+            new_locals = frame.locals.copy()
+            new_locals[idx] = jvm.Value.int(v.value + n)
+            new_frame = PerVarFrame(locals=new_locals, stack=frame.stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
+        case jvm.Return(type=(jvm.Int() | jvm.Reference())):
+            frame = state.frames.peek()
+            if not frame.stack.items:
+                return
+            v1 = frame.stack.items[-1]
+            
+            # Pop current frame
+            if len(state.frames.items) <= 1:
+                # Returning from main method
+                yield "ok"
+            else:
+                # Return to caller
+                caller_frame = state.frames.items[-2]
+                new_caller_stack = Stack(caller_frame.stack.items + [v1])
+                new_caller_frame = PerVarFrame(locals=caller_frame.locals, stack=new_caller_stack)
+                new_frames = Stack(state.frames.items[:-2] + [new_caller_frame])
+                # PC should already be set correctly (incremented when call was made)
+                new_state = AState(frames=new_frames, pc=state.pc)
+                yield new_state
+        case jvm.Return(type=None): # None is equivalent for void
+            # Pop the current frame
+            if len(state.frames.items) <= 1:
+                # Returning from main method
+                yield "ok"
+            else:
+                # Return to caller
+                new_frames = Stack(state.frames.items[:-1])
+                # PC should already be set correctly
+                new_state = AState(frames=new_frames, pc=state.pc)
+                yield new_state
+        case jvm.NewArray(type=jvm.Int(), dim=dim):
+            # NewArray requires heap abstraction
+            raise NotImplementedError("NewArray requires heap abstraction")
+        case jvm.InvokeSpecial(_, method_name, _):
+            string_method = str(method_name)[:24]
+            assert string_method == "java/lang/AssertionError", f"Only assertion errors are handled so far, not {string_method}"
+            if str(method_name)[:24] == "java/lang/AssertionError":
+                yield "assertion error"
+        case jvm.InvokeStatic(method=static_methodid):
+            # invoke a static method
+            frame = state.frames.peek()
+            num_params = len(static_methodid.methodid.params._elements)
+            
+            if len(frame.stack.items) < num_params:
+                return
+            
+            # Pop arguments from caller's stack
+            args = frame.stack.items[-num_params:]
+            new_caller_stack = Stack(frame.stack.items[:-num_params])
+            new_caller_frame = PerVarFrame(locals=frame.locals, stack=new_caller_stack)
+            
+            # Create new frame for callee with arguments in locals
+            new_callee_locals = {i: args[i] for i in range(num_params)}
+            new_callee_frame = PerVarFrame(locals=new_callee_locals, stack=Stack.empty())
+            
+            # Push new frame onto frame stack
+            new_frames = Stack(state.frames.items[:-1] + [new_caller_frame, new_callee_frame])
+            
+            # Set PC to start of called method
+            new_pc = PC(static_methodid, 0)
+            new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
         case _:
             logger.warning(f"Unhandled opcode: {opr!r}")
@@ -253,7 +509,7 @@ def manystep(sts : StateSet) -> Iterable[AState | str]:
 # perform abstract interpretation
 MAX_STEPS = 100
 final = set()
-sts = AState.initialstate_from_method(methodid) # TODO: better naming - ´sts´ refer to set of states
+sts = AState.initialstate_from_method(methodid, input.values) # TODO: better naming - ´sts´ refer to set of states
 
 for i in range(MAX_STEPS):
     if not sts.needswork:
