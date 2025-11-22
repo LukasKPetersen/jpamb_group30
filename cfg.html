@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "lightgreen", "font": {"size": 16}, "id": 4449906912, "label": "B0\n{0 - 3}", "shape": "dot", "size": 25}]);
-                  edges = new vis.DataSet([]);
+                  nodes = new vis.DataSet([{"color": "lightgreen", "font": {"size": 16}, "id": 4420451840, "label": "B0\n{0 - 1}", "shape": "dot", "size": 25}, {"color": "#97c2fc", "id": 4420704912, "label": "B1\n{2 - 3}", "shape": "dot"}, {"color": "#97c2fc", "id": 4420705552, "label": "B2\n{4 - 7}\nthrow", "shape": "dot"}, {"color": "#97c2fc", "id": 4420855680, "label": "B3\n{8 - 11}\nreturn:I", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "font": {"align": "top", "size": 20}, "from": 4420451840, "label": "ifz ne 8 : False", "to": 4420704912}, {"arrows": "to", "font": {"align": "top", "size": 20}, "from": 4420704912, "label": "ifz ne 8 : False", "to": 4420705552}, {"arrows": "to", "font": {"align": "top", "size": 20}, "from": 4420704912, "label": "ifz ne 8 : True", "to": 4420855680}, {"arrows": "to", "font": {"align": "top", "size": 20}, "from": 4420451840, "label": "ifz ne 8 : True", "to": 4420855680}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });

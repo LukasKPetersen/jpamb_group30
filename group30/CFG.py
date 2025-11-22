@@ -1,6 +1,6 @@
 import jpamb
 import jpamb.jvm as jvm
-from interpreter.interpreter import Bytecode, PC
+from interpreter import Bytecode, PC
 import copy
 from pyvis.network import Network
 
