@@ -55,3 +55,6 @@ markers = [
   "slow: mark test as slow"
 ]
 
+[tool.ruff.lint]
+ignore = ["F841", "F403"]
+

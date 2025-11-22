@@ -403,7 +403,23 @@ src/main/java/jpamb/cases
     ├── Calls.java
     ├── Loops.java
     ├── Simple.java
-    └── Tricky.java
+    ├── Tricky.java
+    └── <YOUR_FILE_HERE>.java
+```
+
+Add it to the top of `src/main/java/jpamb/Runtime.java`:
+
+```
+public class Runtime {
+  static List<Class<?>> caseclasses = List.of(
+      Simple.class,
+      Loops.class,
+      Tricky.class,
+      jpamb.cases.Arrays.class,
+      Dependent.class, 
+      Calls.class, 
+      // >> INSERT CLASS HERE
+);
 ```
 
 and then running the following command:

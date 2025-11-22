@@ -247,7 +247,7 @@ def checkhealth(suite):
     "--report",
     "-r",
     default="-",
-    type=click.File(mode="w"),
+    type=click.File(mode="w", encoding="utf-8"),
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
@@ -361,7 +361,7 @@ def cfg(suite, program, filter, with_python, timeout):
     "--report",
     "-r",
     default="-",
-    type=click.File(mode="w"),
+    type=click.File(mode="w", encoding="utf-8"),
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
@@ -375,7 +375,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
     last_case = None
     if stepwise:
         try:
-            with open(".jpamb-stepwise") as f:
+            with open(".jpamb-stepwise", encoding="utf-8") as f:
                 last_case = model.Case.decode(f.read())
         except ValueError as e:
             log.warning(e)
@@ -409,7 +409,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
             if case.result == ret:
                 total += 1
             elif stepwise:
-                with open(".jpamb-stepwise", "w") as f:
+                with open(".jpamb-stepwise", "w", encoding="utf-8") as f:
                     f.write(case.encode())
                 sys.exit(-1)
             count += 1
@@ -444,7 +444,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
     "--report",
     "-r",
     default="-",
-    type=click.File(mode="w"),
+    type=click.File(mode="w", encoding="utf-8"),
     help="A file to write the report to",
 )
 @click.argument("PROGRAM", nargs=-1)
@@ -542,6 +542,67 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     )
 
 
+@dataclasses.dataclass
+class DockerRunner:
+    """Encapsulates Docker/Podman execution with platform-specific handling."""
+
+    docker_cmd: list[str]  # The base docker command (e.g., ["docker"] or ["wsl", ...])
+    image: str  # Docker image to use
+    workfolder: str  # Path to mount (already WSL-converted if needed)
+
+    @classmethod
+    def create(cls, workfolder: Path, image: str):
+        """Factory method that handles platform detection and path conversion."""
+        import os
+
+        # Get docker command
+        if os.environ.get("USE_WSL_DOCKER") == "1":
+            log.info("Using Docker in WSL (Ubuntu)")
+            docker_cmd = ["wsl", "-d", "Ubuntu", "--exec", "sudo", "docker"]
+            # Convert path for WSL
+            path_str = str(workfolder).replace("\\", "/")
+            if len(path_str) >= 2 and path_str[1] == ":":
+                drive = path_str[0].lower()
+                rest = path_str[2:]
+                workfolder_str = f"/mnt/{drive}{rest}"
+            else:
+                workfolder_str = str(workfolder)
+        else:
+            dockerbin = shutil.which("podman") or shutil.which("docker")
+            if not dockerbin:
+                raise click.UsageError("No docker or podman on PATH")
+            log.info(f"Using docker: {dockerbin}")
+            docker_cmd = [dockerbin]
+            workfolder_str = str(workfolder)
+
+        return cls(docker_cmd, image, workfolder_str)
+
+    def run(self, command: list[str], **kwargs):
+        """
+        Run a command inside the Docker container.
+
+        Args:
+            command: The command to run (e.g., ["javac", "-d", "target/classes", ...])
+            **kwargs: Additional arguments passed to the run() function
+                     (timeout, logerr, logout, etc.)
+
+        Returns:
+            The result from run() function
+        """
+        full_cmd = (
+            self.docker_cmd
+            + [
+                "run",
+                "--rm",
+                "-v",
+                f"{self.workfolder}:/workspace",
+                self.image,
+            ]
+            + command
+        )
+        return run(full_cmd, **kwargs)
+
+
 @cli.command()
 @click.option(
     "-D",
@@ -579,28 +640,13 @@ def build(suite, compile, decompile, document, test, docker):
         document = document is None
         test = test is None
 
-    dockerbin = shutil.which("podman") or shutil.which("docker")
-
-    if not dockerbin:
-        raise click.UsageError("No docker or podman on PATH")
-
-    log.info(f"Using docker: {dockerbin}")
-
-    cmd = [
-        dockerbin,
-        "run",
-        "--rm",
-        "-v",
-        f"{suite.workfolder}:/workspace",
-        docker,
-    ]
+    docker_runner = DockerRunner.create(suite.workfolder, docker)
 
     if compile:
         log.info("Compiling")
-        run(
-            cmd
-            + ["javac", "-d", "target/classes"]
-            + list(a.relative_to(suite.workfolder) for a in suite.sourcefiles()),
+        docker_runner.run(
+            ["javac", "-g", "-d", "target/classes"]
+            + [a.relative_to(suite.workfolder).as_posix() for a in suite.sourcefiles()],
             logerr=log.warning,
             logout=log.info,
             timeout=600,
@@ -608,8 +654,8 @@ def build(suite, compile, decompile, document, test, docker):
 
         log.info("Building Stats")
 
-        res, x = run(
-            cmd + ["java", "-cp", "target/classes", "jpamb.Runtime"],
+        res, x = docker_runner.run(
+            ["java", "-cp", "target/classes", "jpamb.Runtime"],
             logout=log.info,
             logerr=log.debug,
             timeout=60,
@@ -623,18 +669,17 @@ def build(suite, compile, decompile, document, test, docker):
         log.info("Decompiling")
         for cl in suite.classes():
             log.info(f"Decompiling {cl}")
-            res, t = run(
-                cmd
-                + [
+            res, t = docker_runner.run(
+                [
                     "jvm2json",
                     "-s",
-                    suite.classfile(cl).relative_to(suite.workfolder),
+                    suite.classfile(cl).relative_to(suite.workfolder).as_posix(),
                 ],
                 logerr=log.warning,
             )
             file = suite.decompiledfile(cl)
             file.parent.mkdir(exist_ok=True, parents=True)
-            with open(file, "w") as f:
+            with open(file, "w", encoding="utf-8") as f:
                 json.dump(json.loads(res), f, indent=2, sort_keys=True)
         log.success("Done decompiling")
 
@@ -661,7 +706,7 @@ def build(suite, compile, decompile, document, test, docker):
             for o in list_ops:
                 class_opcodes[str(case.methodid.classname).split(".")[-1]].add(o)
 
-        with open("OPCODES.md", "w") as document:
+        with open("OPCODES.md", "w", encoding="utf-8") as document:
             document.write("#Bytecode instructions\n")
             document.write("| Mnemonic | Opcode Name |  Exists in |  Count |\n")
             document.write("| :---- | :---- | :----- | -----: |\n")
@@ -681,7 +726,9 @@ def build(suite, compile, decompile, document, test, docker):
                 root = folder.parent
 
                 rel = Path(getsourcefile(opcode.__class__)).relative_to(root)
-                giturl = f"{rel}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
+                giturl = (
+                    f"{rel.as_posix()}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
+                )
 
                 document.write(
                     " | ["
@@ -706,12 +753,11 @@ def build(suite, compile, decompile, document, test, docker):
             folder = suite.classfiles_folder
 
             try:
-                res, x = run(
-                    cmd
-                    + [
+                res, x = docker_runner.run(
+                    [
                         "java",
                         "-cp",
-                        folder.relative_to(suite.workfolder),
+                        folder.relative_to(suite.workfolder).as_posix(),
                         "-ea",
                         "jpamb.Runtime",
                         case.methodid.encode(),
@@ -795,7 +841,7 @@ def plot(ctx, report, directory):
     def parse_report(report):
         import json
 
-        with open(report, "r") as data:
+        with open(report, "r", encoding="utf-8") as data:
             try:
                 report = json.loads(data.read())
 
