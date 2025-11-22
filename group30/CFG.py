@@ -67,23 +67,45 @@ class CFG:
         else:
             return self.nodes[offset_start]
         
-    def generate_basic_node(self, offset_start: int, target: int, byte_code: jvm.Opcode, pc: PC):
+    def generate_basic_node(self, offset_start: int, target: int, byte_code: jvm.Opcode, pc: PC, branching: bool):
 
         node = self.add_node(offset_start, pc.offset)
-        # Increment program counter
-        pc += 1
-        pc_copy = copy.copy(pc)
-        pc_copy.set(target)
-        # Make the branching nodes
-        new_node_1 = self.build(pc, pc.offset)
-        new_node_2 = self.build(pc_copy, pc_copy.offset)
-        # Edges for graph
-        # Note: When a jump is made, that trace satisfied the condition
-        edge_1 = Edge(node, new_node_1, byte_code, False)
-        edge_2 = Edge(node, new_node_2, byte_code, True)
-        # Attach edges to node
-        node.attach_edges([edge_1, edge_2])
 
+        if branching:
+            # Increment program counter
+            pc += 1
+            pc_copy = copy.copy(pc)
+            pc_copy.set(target)
+            # Make the branching nodes
+            new_node_1 = self.build(pc, pc.offset)
+            new_node_2 = self.build(pc_copy, pc_copy.offset)
+            # Edges for graph
+            # Note: When a jump is made, that trace satisfied the condition
+            edge_1 = Edge(node, new_node_1, byte_code, False)
+            edge_2 = Edge(node, new_node_2, byte_code, True)
+            # Attach edges to node
+            node.attach_edges([edge_1, edge_2])
+        else:
+            # Remember that a goto can back in offsets
+            # If it does such, we do not wish to continue the build otherwise we will get an infinite loop
+            # Therefore do not call build
+            if pc.offset > target:
+                pc.set(target)
+                # look in nodes for the node where the minimal offset_end satisfies target < offset_end
+                new_node = None
+                for _, n in sorted(self.nodes.items()):
+                    if target < n.offset_end:
+                        new_node = self.nodes[n.offset_start]
+                        break
+                assert new_node != None, "Error occurred. A node with a single outgoing edge could not find the receiving node"
+                edge = Edge(node, new_node, byte_code, None)
+                node.attach_edges([edge])
+            else:
+                pc.set(target)
+                new_node = self.build(pc, pc.offset)
+                edge = Edge(node, new_node, byte_code, None)
+                node.attach_edges([edge])
+                
         return node
     
     def generate_terminating_node(self, offset_start: int, offset_end: int, byte_code: jvm.Opcode):
@@ -124,8 +146,11 @@ class CFG:
             match opr:
                 case jvm.If(target=t) | jvm.Ifz(target=t):
                     # recursive call must be qualified on the instance (self)
-                    node = self.generate_basic_node(offset_start, t, opr, pc)
+                    node = self.generate_basic_node(offset_start, t, opr, pc, True)
                     return node
+                case jvm.Goto(target=t):
+                   node = self.generate_basic_node(offset_start, t, opr, pc, False)
+                   return node
                 case jvm.Return():
                     # Final node
                     # No edges here, they are constructed from the parent node
@@ -217,8 +242,13 @@ def visualize_cfg_pyvis(cfg):
             else:        
                 net.add_node(id(edge.end_node),
                          label=f"{edge.end_node}\n{{{edge.end_node.offsets()}}}")
-            
-            net.add_edge(id(node), id(edge.end_node),
+            if edge.eval == None:
+                net.add_edge(id(node), id(edge.end_node),
+                         label=f"{str(edge.branch_opcode)}",
+                         font={"size": 20, "align": "top"},
+                         arrows="to")
+            else:
+                net.add_edge(id(node), id(edge.end_node),
                          label=f"{str(edge.branch_opcode)} : {str(edge.eval)}",
                          font={"size": 20, "align": "top"},
                          arrows="to")

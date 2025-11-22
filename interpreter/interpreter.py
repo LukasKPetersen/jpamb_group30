@@ -8,7 +8,7 @@ from loguru import logger
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}")
 
-# methodid, input = jpamb.getcase()
+methodid, input = jpamb.getcase()
 # print(f"This is the methodid: {methodid}\nThis is the input: {input}")
 
 from dataclasses import dataclass
@@ -422,30 +422,30 @@ def step(state: State) -> State | str:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
 
-# frame = Frame.from_method(methodid)
-# state = State({}, Stack.empty())
+frame = Frame.from_method(methodid)
+state = State({}, Stack.empty())
 
-# for i, v in enumerate(input.values):
-#     # We have to sort between types in the input and where we store them
-#     # Primitives can go directly into the locals array
-#     # Objects and arrays go into the heap
+for i, v in enumerate(input.values):
+    # We have to sort between types in the input and where we store them
+    # Primitives can go directly into the locals array
+    # Objects and arrays go into the heap
 
-#     if isinstance(v.type, (jvm.Array | jvm.Object)):
-#         heap_length = len(state.heap)
-#         # Create a reference of the object
-#         ref = jvm.Value(jvm.Reference(), heap_length)
-#         # insert value in heap and reference in locals
-#         state.heap[ref.value] = v
-#         frame.locals[i] = ref
-#     else:
-#         frame.locals[i] = v
+    if isinstance(v.type, (jvm.Array | jvm.Object)):
+        heap_length = len(state.heap)
+        # Create a reference of the object
+        ref = jvm.Value(jvm.Reference(), heap_length)
+        # insert value in heap and reference in locals
+        state.heap[ref.value] = v
+        frame.locals[i] = ref
+    else:
+        frame.locals[i] = v
 
-# state.frames.push(frame)
+state.frames.push(frame)
 
-# for x in range(100000):
-#     state = step(state)
-#     if isinstance(state, str):
-#         print(state)
-#         break
-# else:
-#     print("*")
+for x in range(100000):
+    state = step(state)
+    if isinstance(state, str):
+        print(state)
+        break
+else:
+    print("*")
