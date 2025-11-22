@@ -4,6 +4,7 @@
 
 - Add Docker Image
 - Change official build version to be the one compiled through docker.
+- Add Dependent
 
 ## Version 0.3.0
 

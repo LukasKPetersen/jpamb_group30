@@ -6,14 +6,13 @@ from pathlib import Path
 import json
 import pandas as pd
 
-from . import utils
 from . import suite
 
 
 def get_maxpoints():
     import csv
 
-    with open("stats/distribution.csv") as fp:
+    with open("stats/distribution.csv", encoding="utf-8") as fp:
         reader = list(csv.DictReader(fp))
         return (len(reader) - 1) * (len(reader[0]) - 1)
 
@@ -170,8 +169,6 @@ def stats(files, report, verbose):
     tools_df = pd.DataFrame(tools)
 
     import plotly.graph_objects as go
-    import plotly.express as px
-    from plotly.subplots import make_subplots
 
     colors = {
         "cheater": "red",

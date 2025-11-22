@@ -12,7 +12,6 @@ from loguru import logger
 import collections
 from collections import defaultdict
 import re
-import os
 import shutil
 import subprocess
 
@@ -289,7 +288,7 @@ class Suite:
     def findclass(self, cn: jvm.ClassName) -> dict:
         import json
 
-        with open(self.decompiledfile(cn)) as fp:
+        with open(self.decompiledfile(cn), encoding="utf-8") as fp:
             return json.load(fp)
 
     def findmethod(self, methodid: jvm.Absolute[jvm.MethodID]) -> jvm:
@@ -324,7 +323,7 @@ class Suite:
 
     @property
     def version(self):
-        with open(self.workfolder / "CITATION.cff") as f:
+        with open(self.workfolder / "CITATION.cff", encoding="utf-8") as f:
             import yaml
 
             return yaml.safe_load(f)["version"]
@@ -332,7 +331,7 @@ class Suite:
     @property
     def cases(self) -> tuple[Case, ...]:
         if self._cases is None:
-            with open(self.case_file) as f:
+            with open(self.case_file, encoding="utf-8") as f:
                 self._cases = tuple(Case.decode(line) for line in f)
         return self._cases
 

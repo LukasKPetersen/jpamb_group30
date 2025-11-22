@@ -3,12 +3,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool False)}, ϵ, jpamb.cases.Simple.assertBoolean:(Z)V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertBoolean:(Z)V' '(false)'
 │ Expected 'assertion error' and got 'failure'
@@ -18,12 +14,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool True)}, ϵ, jpamb.cases.Simple.assertBoolean:(Z)V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertBoolean:(Z)V' '(true)'
 │ Expected 'ok' and got 'failure'
@@ -33,12 +25,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{}, ϵ, jpamb.cases.Simple.assertFalse:()V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertFalse:()V' '()'
 │ Expected 'assertion error' and got 'failure'
@@ -48,12 +36,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 0)}, ϵ, jpamb.cases.Simple.assertInteger:(I)V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertInteger:(I)V' '(0)'
 │ Expected 'assertion error' and got 'failure'
@@ -63,12 +47,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.assertInteger:(I)V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertInteger:(I)V' '(1)'
 │ Expected 'ok' and got 'failure'
@@ -78,12 +58,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int -1)}, ϵ, jpamb.cases.Simple.assertPositive:(I)V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertPositive:(I)V' '(-1)'
 │ Expected 'assertion error' and got 'failure'
@@ -93,12 +69,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.assertPositive:(I)V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.assertPositive:(I)V' '(1)'
 │ Expected 'ok' and got 'failure'
@@ -110,12 +82,8 @@
 │││ {} <{0:(int -1)}, ϵ, jpamb.cases.Simple.checkBeforeAssert:(I)V:0>
 │││ [DEBUG] STEP ifz ne 3
 │││ {} <{0:(int -1)}, (int -1), jpamb.cases.Simple.checkBeforeAssert:(I)V:1>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='ne', target=3)
+│││ [WARNING] It seems Ifz(offset=1, condition='ne', target=3) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.if_cond
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeAssert:(I)V' '(-1)'
 │ Expected 'assertion error' and got 'failure'
@@ -127,12 +95,8 @@
 │││ {} <{0:(int 0)}, ϵ, jpamb.cases.Simple.checkBeforeAssert:(I)V:0>
 │││ [DEBUG] STEP ifz ne 3
 │││ {} <{0:(int 0)}, (int 0), jpamb.cases.Simple.checkBeforeAssert:(I)V:1>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='ne', target=3)
+│││ [WARNING] It seems Ifz(offset=1, condition='ne', target=3) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.if_cond
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeAssert:(I)V' '(0)'
 │ Expected 'ok' and got 'failure'
@@ -144,12 +108,8 @@
 │││ {} <{0:(int 0)}, ϵ, jpamb.cases.Simple.checkBeforeDivideByN2:(I)I:0>
 │││ [DEBUG] STEP ifz eq 6
 │││ {} <{0:(int 0)}, (int 0), jpamb.cases.Simple.checkBeforeDivideByN2:(I)I:1>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='eq', target=6)
+│││ [WARNING] It seems Ifz(offset=1, condition='eq', target=6) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.if_cond
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I' '(0)'
 │ Expected 'ok' and got 'failure'
@@ -161,12 +121,8 @@
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.checkBeforeDivideByN2:(I)I:0>
 │││ [DEBUG] STEP ifz eq 6
 │││ {} <{0:(int 1)}, (int 1), jpamb.cases.Simple.checkBeforeDivideByN2:(I)I:1>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='eq', target=6)
+│││ [WARNING] It seems Ifz(offset=1, condition='eq', target=6) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.if_cond
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I' '(1)'
 │ Expected 'ok' and got 'failure'
@@ -176,12 +132,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 0)}, ϵ, jpamb.cases.Simple.checkBeforeDivideByN:(I)I:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I' '(0)'
 │ Expected 'assertion error' and got 'failure'
@@ -191,12 +143,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.checkBeforeDivideByN:(I)I:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I' '(1)'
 │ Expected 'ok' and got 'failure'
@@ -246,12 +194,8 @@
 │││ {} <{0:(int 0)}, (int 1)(int 0), jpamb.cases.Simple.divideByNMinus10054203:(I)I:2>
 │││ [DEBUG] STEP binary:I sub
 │││ {} <{0:(int 0)}, (int 1)(int 0)(int 10054203), jpamb.cases.Simple.divideByNMinus10054203:(I)I:3>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Binary(offset=4, type=Int(), operant=<BinaryOpr.Sub: 2>)
+│││ [WARNING] It seems Binary(offset=4, type=Int(), operant=<BinaryOpr.Sub: 2>) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.isub
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.divideByNMinus10054203:(I)I' '(0)'
 │ Expected 'ok' and got 'failure'
@@ -267,12 +211,8 @@
 │││ {} <{0:(int 10054203)}, (int 1)(int 10054203), jpamb.cases.Simple.divideByNMinus10054203:(I)I:2>
 │││ [DEBUG] STEP binary:I sub
 │││ {} <{0:(int 10054203)}, (int 1)(int 10054203)(int 10054203), jpamb.cases.Simple.divideByNMinus10054203:(I)I:3>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Binary(offset=4, type=Int(), operant=<BinaryOpr.Sub: 2>)
+│││ [WARNING] It seems Binary(offset=4, type=Int(), operant=<BinaryOpr.Sub: 2>) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.isub
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.divideByNMinus10054203:(I)I' '(10054203)'
 │ Expected 'divide by zero' and got 'failure'
@@ -350,12 +290,8 @@
 │││ {} <{0:(int 1), 1:(int 2)}, (int 1), jpamb.cases.Simple.justAdd:(II)I:1>
 │││ [DEBUG] STEP binary:I add
 │││ {} <{0:(int 1), 1:(int 2)}, (int 1)(int 2), jpamb.cases.Simple.justAdd:(II)I:2>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Binary(offset=2, type=Int(), operant=<BinaryOpr.Add: 1>)
+│││ [WARNING] It seems Binary(offset=2, type=Int(), operant=<BinaryOpr.Add: 1>) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.iadd
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.justAdd:(II)I' '(1, 2)'
 │ Expected 'ok' and got 'failure'
@@ -369,12 +305,8 @@
 │││ {} <{0:(int 1), 1:(int 2)}, (int 1), jpamb.cases.Simple.justMulitply:(II)I:1>
 │││ [DEBUG] STEP binary:I mul
 │││ {} <{0:(int 1), 1:(int 2)}, (int 1)(int 2), jpamb.cases.Simple.justMulitply:(II)I:2>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Binary(offset=2, type=Int(), operant=<BinaryOpr.Mul: 3>)
+│││ [WARNING] It seems Binary(offset=2, type=Int(), operant=<BinaryOpr.Mul: 3>) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.imul
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.justMulitply:(II)I' '(1, 2)'
 │ Expected 'ok' and got 'failure'
@@ -398,12 +330,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP return:V
 │││ {} <{}, ϵ, jpamb.cases.Simple.justReturnNothing:()V:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Return(offset=0, type=None)
+│││ [WARNING] It seems Return(offset=0, type=None) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.return
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.justReturnNothing:()V' '()'
 │ Expected 'ok' and got 'failure'
@@ -413,12 +341,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool False)}, ϵ, jpamb.cases.Simple.multiError:(Z)I:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(false)'
 │ Expected 'assertion error' and got 'failure'
@@ -428,12 +352,8 @@
 ││┌ Stderr
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool True)}, ϵ, jpamb.cases.Simple.multiError:(Z)I:0>
-│││ Traceback (most recent call last):
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
-│││     state = step(state)
-│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
-│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
-│││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
+│││ [WARNING] It seems Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean()))) is not implemented!
+│││ [WARNING] Instructions can be found at: https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.getstatic
 ││└ Stderr
 │└ Run .venv/bin/python solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(true)'
 │ Expected 'divide by zero' and got 'failure'

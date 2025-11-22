@@ -9,7 +9,6 @@ each instruction.
 
 from dataclasses import dataclass, fields
 from abc import ABC, abstractmethod
-from typing import Self
 
 import enum
 import sys
@@ -28,9 +27,9 @@ class Opcode(ABC):
     def __post_init__(self):
         for f in fields(self):
             v = getattr(self, f.name)
-            assert isinstance(
-                v, f.type
-            ), f"Expected {f.name!r} to be type {f.type}, but was {v!r}, in {self!r}"
+            assert isinstance(v, f.type), (
+                f"Expected {f.name!r} to be type {f.type}, but was {v!r}, in {self!r}"
+            )
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
@@ -71,6 +70,8 @@ class Opcode(ABC):
                 opr = Goto
             case "return":
                 opr = Return
+            case "negate":
+                opr = Negate
             case "invoke":
                 match json["access"]:
                     case "virtual":
@@ -95,6 +96,7 @@ class Opcode(ABC):
             raise NotImplementedError(f"Unhandled opcode {json!r}") from e
 
     def help(self):
+        logger.warning(f"It seems {self!r} is not implemented!")
         logger.warning("Instructions can be found at: " + self.url())
         if self.semantics():
             logger.debug(f"Semantics:\n {self.semantics()}")
@@ -105,6 +107,9 @@ class Opcode(ABC):
 
     @abstractmethod
     def mnemonic(self) -> str: ...
+
+    @abstractmethod
+    def semantics(self) -> str | None: ...
 
     def url(self) -> str:
         return (
@@ -178,6 +183,34 @@ class Push(Opcode):
 
 
 @dataclass(frozen=True, order=True)
+class Negate(Opcode):
+    """The new array opcode"""
+
+    type: jvm.Type
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+            type=jvm.Type.from_json(json["type"]),
+        )
+
+    def real(self) -> str:
+        return f"negate {self.type}"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        match self.type:
+            case jvm.Int():
+                return "ineg"
+
+    def __str__(self):
+        return self.real()
+
+
+@dataclass(frozen=True, order=True)
 class NewArray(Opcode):
     """The new array opcode"""
 
@@ -199,11 +232,6 @@ class NewArray(Opcode):
             return f"multianewarray {self.type} {self.dim}"
 
     def semantics(self) -> str | None:
-        if self.dim == 1:
-            return "newarray"
-        else:
-            return "multianewarray"
-
         return None
 
     def mnemonic(self) -> str:
@@ -1054,9 +1082,9 @@ class Return(Opcode):
     type: jvm.Type | None  # Return type (None for void return)
 
     def __post_init__(self):
-        assert (
-            self.type is None or self.type.is_stacktype()
-        ), "return only handles stack types {self.type()}"
+        assert self.type is None or self.type.is_stacktype(), (
+            "return only handles stack types {self.type()}"
+        )
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
