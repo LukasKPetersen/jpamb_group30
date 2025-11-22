@@ -28,16 +28,14 @@ class RandomStrategy(Strategy):
 
                     match elem:
                         case jvm.Int():
-                            #val = random.randint(-2147483648, 2147483647) # -2^31 to (2^31)-1
-                            val = random.randint(-100, 100)
+                            val = random.randint(-2147483648, 2147483647) # -2^31 to (2^31)-1
                             input_val.append(jvm.Value.int(val))
                         case jvm.Boolean():  # boolean
                             val = random.choice([True, False])
                             input_val.append(jvm.Value.boolean(val))
                         case jvm.Array(jvm.Int()):
                             length = random.randint(0, 5)
-                            #array_vals = [random.randint(-2147483648, 2147483647) for _ in range(length)]
-                            array_vals = [random.randint(-10, 100) for _ in range(length)]
+                            array_vals = [random.randint(-2147483648, 2147483647) for _ in range(length)]
                             input_val.append(jvm.Value.array(jvm.Int(), array_vals))
                         case jvm.Array(jvm.Char()):
                             length = random.randint(0, 5)
