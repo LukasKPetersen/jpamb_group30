@@ -165,8 +165,6 @@ def step(state: AState) -> Iterable[AState | str]:
     logger.debug("")
     logger.debug(f"* STEP {pc}:")
     logger.debug(f"* - operation: {opr}")
-    logger.debug(f"* - state: {state}")
-    logger.debug("")
     
     match opr:
         case jvm.Get(field=f, static=s):
@@ -338,16 +336,19 @@ def step(state: AState) -> Iterable[AState | str]:
             assert v1.type is jvm.Int(), f"expected int, but got {v1}"
             assert v2.type is jvm.Int(), f"expected int, but got {v2}"
             
-            if v2.value == 0:
-                yield "divide by zero"
-            else:
-                result = jvm.Value.int(v1.value // v2.value)
-                new_stack = Stack(frame.stack.items[:-2] + [result])
-                new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
-                new_frames = Stack(state.frames.items[:-1] + [new_frame])
-                new_pc = pc + 1
-                new_state = AState(frames=new_frames, pc=new_pc)
-                yield new_state
+            # For abstract interpretation, explore both possibilities:
+            # 1. Divisor could be zero -> divide by zero error
+            yield "divide by zero"
+            
+            # 2. Divisor could be non-zero -> computation succeeds
+            # Use concrete value if available, or abstract value otherwise
+            result = jvm.Value.int(v1.value // v2.value if v2.value != 0 else 0)
+            new_stack = Stack(frame.stack.items[:-2] + [result])
+            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+            new_frames = Stack(state.frames.items[:-1] + [new_frame])
+            new_pc = pc + 1
+            new_state = AState(frames=new_frames, pc=new_pc)
+            yield new_state
         case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Sub):
             frame = state.frames.peek()
             if len(frame.stack.items) < 2:
