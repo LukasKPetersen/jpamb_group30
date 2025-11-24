@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "lightgreen", "font": {"size": 16}, "id": 4561595632, "label": "B0\n{0 - 1}", "shape": "dot", "size": 25}]);
-                  edges = new vis.DataSet([]);
+                  nodes = new vis.DataSet([{"color": "lightgreen", "font": {"size": 16}, "id": 4552272128, "label": "B0@0\n{0 - 0}", "shape": "dot", "size": 25}, {"color": "#97c2fc", "id": 4552497488, "label": "B0@1\n{0 - 0}\nreturn:V", "shape": "dot"}, {"color": "#97c2fc", "id": 4552496528, "label": "B1@0\n{1 - 1}\nreturn:V", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "font": {"align": "top", "size": 20}, "from": 4552272128, "label": "invoke static jpamb/cases/Calls.assertTrue:()V", "to": 4552497488}, {"arrows": "to", "font": {"align": "top", "size": 20}, "from": 4552497488, "label": "return:V", "to": 4552496528}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
