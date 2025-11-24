@@ -3,6 +3,7 @@ from jpamb import jvm
 from dataclasses import dataclass
 from typing import Iterable, TypeVar
 import sign_abstraction
+from interval_abstraction import Interval, Arithmetic
 
 import sys
 from loguru import logger
@@ -77,6 +78,53 @@ bc = Bytecode(suite, dict())
 V = TypeVar("V") # Value
 AV = TypeVar("AV") # Abstract Value
 
+@dataclass(frozen=True)
+class AbstractValue:
+    """Wraps an interval with a JVM type for abstract interpretation"""
+    type: jvm.Type
+    interval: Interval
+    
+    @classmethod
+    def from_concrete(cls, value: jvm.Value) -> "AbstractValue":
+        """Convert concrete JVM value to abstract value with interval"""
+        if isinstance(value.type, jvm.Int):
+            return cls(type=jvm.Int(), interval=Interval(value.value, value.value))
+        else:
+            # For non-int types, return with empty interval (not tracked)
+            return cls(type=value.type, interval=Interval.empty())
+    
+    @classmethod
+    def int_interval(cls, interval: Interval) -> "AbstractValue":
+        """Create an abstract int value from an interval"""
+        return cls(type=jvm.Int(), interval=interval)
+    
+    @classmethod
+    def top_int(cls) -> "AbstractValue":
+        """Create top element ([-inf, inf]) for integers"""
+        import sys
+        return cls(type=jvm.Int(), interval=Interval(-sys.maxsize, sys.maxsize))
+    
+    def __le__(self, other: "AbstractValue") -> bool:
+        """Ordering for lattice"""
+        if not isinstance(other, AbstractValue):
+            return False
+        return self.interval <= other.interval
+    
+    def __or__(self, other: "AbstractValue") -> "AbstractValue":
+        """Join operator"""
+        if not isinstance(other, AbstractValue):
+            return self
+        return AbstractValue(type=self.type, interval=self.interval | other.interval)
+    
+    def __and__(self, other: "AbstractValue") -> "AbstractValue":
+        """Meet operator"""
+        if not isinstance(other, AbstractValue):
+            return self
+        return AbstractValue(type=self.type, interval=self.interval & other.interval)
+    
+    def __str__(self) -> str:
+        return f"{self.type}:{self.interval}"
+
 @dataclass
 class PerVarFrame[AV]:
     locals: dict[int, AV]  # Changed from V to AV
@@ -99,10 +147,26 @@ class PerVarFrame[AV]:
     
     # join operator (for lattice functionality)
     def __or__(self, other: "PerVarFrame[AV]") -> "PerVarFrame[AV]":
-        return PerVarFrame(
-            locals={var_id: self.locals[var_id] or other.locals[var_id] for var_id in self.locals},
-            stack=self.stack or other.stack
-        )
+        # Join locals: take union of keys and join values
+        all_vars = set(self.locals.keys()) | set(other.locals.keys())
+        joined_locals = {}
+        for var_id in all_vars:
+            if var_id in self.locals and var_id in other.locals:
+                joined_locals[var_id] = self.locals[var_id] | other.locals[var_id]
+            elif var_id in self.locals:
+                joined_locals[var_id] = self.locals[var_id]
+            else:
+                joined_locals[var_id] = other.locals[var_id]
+        
+        # Join stacks: they should have same length at merge points
+        if len(self.stack.items) != len(other.stack.items):
+            # If stacks differ in length, use the shorter one (conservative)
+            min_len = min(len(self.stack.items), len(other.stack.items))
+            joined_stack = Stack([self.stack.items[i] | other.stack.items[i] for i in range(min_len)])
+        else:
+            joined_stack = Stack([self.stack.items[i] | other.stack.items[i] for i in range(len(self.stack.items))])
+        
+        return PerVarFrame(locals=joined_locals, stack=joined_stack)
 
     def __str__(self):
         locals = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
@@ -118,12 +182,20 @@ class AState:
         if self.pc != other.pc:
             raise ValueError("Cannot join states at different program points")
         
-        return self  # TODO: needs proper implementation
+        # Join frames stacks
+        if len(self.frames.items) != len(other.frames.items):
+            # Conservative: take minimum frame depth
+            min_depth = min(len(self.frames.items), len(other.frames.items))
+            joined_frames = Stack([self.frames.items[i] | other.frames.items[i] for i in range(min_depth)])
+        else:
+            joined_frames = Stack([self.frames.items[i] | other.frames.items[i] for i in range(len(self.frames.items))])
+        
+        return AState(frames=joined_frames, pc=self.pc)
 
     @classmethod
     def initialstate_from_method(cls, methodid: jvm.AbsMethodID, input_values: tuple = ()) -> "StateSet":
-        # Initialize locals with input parameters
-        initial_locals = {i: input_values[i] for i in range(len(input_values))}
+        # Initialize locals with input parameters as abstract values with intervals
+        initial_locals = {i: AbstractValue.from_concrete(input_values[i]) for i in range(len(input_values))}
         initial_frame = PerVarFrame(locals=initial_locals, stack=Stack.empty())
         initial_pc = PC(method=methodid, offset=0)
         initial_state = cls(frames=Stack([initial_frame]), pc=initial_pc)
@@ -172,9 +244,10 @@ def step(state: AState) -> Iterable[AState | str]:
             s = str(f).split('.')
             assert len(s) == 2, "There is not 1 '.' in the field string, opr: get"
             if (s[1] == "$assertionsDisabled:Z"):
-                # We always assume assertions are enabled
+                # We always assume assertions are enabled (push 0)
                 frame = state.frames.peek()
-                new_stack = Stack(frame.stack.items + [jvm.Value(type=jvm.Int(), value=0)])
+                abs_val = AbstractValue.int_interval(Interval(0, 0))
+                new_stack = Stack(frame.stack.items + [abs_val])
                 new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
                 new_frames = Stack(state.frames.items[:-1] + [new_frame])
                 new_pc = pc + 1
@@ -194,32 +267,60 @@ def step(state: AState) -> Iterable[AState | str]:
             else:
                 raise NotImplementedError(f"jvm.New case not handled yet!")
         case jvm.Ifz(condition=c, target=t):
-            # Conditional branch - explore BOTH paths for abstract interpretation
+            # Conditional branch - use interval analysis for feasibility
             frame = state.frames.peek()
             
-            # Pop value from stack for both branches
             if not frame.stack.items:
                 return
             v = frame.stack.items[-1]
             new_stack_items = frame.stack.items[:-1]
             
-            # For abstract interpretation, we explore both branches
-            # This ensures soundness - we don't miss any possible execution paths
+            # Analyze which branches are feasible based on the interval
+            if not isinstance(v, AbstractValue) or not isinstance(v.type, jvm.Int):
+                # Conservative: explore both branches
+                can_be_true = True
+                can_be_false = True
+            else:
+                interval = v.interval
+                # Check condition against zero
+                if c == "eq":  # value == 0
+                    can_be_true = 0 in interval
+                    can_be_false = interval.lower != 0 or interval.upper != 0
+                elif c == "ne":  # value != 0
+                    can_be_true = interval.lower != 0 or interval.upper != 0
+                    can_be_false = 0 in interval
+                elif c == "lt":  # value < 0
+                    can_be_true = interval.lower < 0
+                    can_be_false = interval.upper >= 0
+                elif c == "ge":  # value >= 0
+                    can_be_true = interval.upper >= 0
+                    can_be_false = interval.lower < 0
+                elif c == "gt":  # value > 0
+                    can_be_true = interval.upper > 0
+                    can_be_false = interval.lower <= 0
+                elif c == "le":  # value <= 0
+                    can_be_true = interval.lower <= 0
+                    can_be_false = interval.upper > 0
+                else:
+                    can_be_true = True
+                    can_be_false = True
+            
             new_stack = Stack(new_stack_items)
             new_frame = PerVarFrame(locals=frame.locals.copy(), stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
             
-            # Always yield jump branch
-            jump_pc = PC(pc.method, t)
-            jump_state = AState(frames=new_frames, pc=jump_pc)
-            yield jump_state
+            # Only yield feasible branches
+            if can_be_true:
+                jump_pc = PC(pc.method, t)
+                jump_state = AState(frames=new_frames, pc=jump_pc)
+                yield jump_state
             
-            # Always yield fall-through branch
-            fall_pc = pc + 1
-            fall_state = AState(frames=new_frames, pc=fall_pc)
-            yield fall_state
+            if can_be_false:
+                fall_pc = pc + 1
+                fall_state = AState(frames=new_frames, pc=fall_pc)
+                yield fall_state
         case jvm.If(condition=c, target=t):
-            # Condition between two values - explore BOTH branches for abstract interpretation
+            # Condition between two values - use interval analysis
             frame = state.frames.peek()
             
             if len(frame.stack.items) < 2:
@@ -229,21 +330,53 @@ def step(state: AState) -> Iterable[AState | str]:
             value1_obj = frame.stack.items[-2]
             new_stack_items = frame.stack.items[:-2]
             
-            # For abstract interpretation, we explore both branches
-            # This ensures soundness - we don't miss any possible execution paths
+            # Analyze which branches are feasible
+            if (not isinstance(value1_obj, AbstractValue) or not isinstance(value1_obj.type, jvm.Int) or
+                not isinstance(value2_obj, AbstractValue) or not isinstance(value2_obj.type, jvm.Int)):
+                can_be_true = True
+                can_be_false = True
+            else:
+                i1 = value1_obj.interval
+                i2 = value2_obj.interval
+                
+                # Check feasibility based on condition
+                if c == "eq":  # v1 == v2
+                    overlap = i1 & i2
+                    can_be_true = not overlap.is_empty
+                    can_be_false = not (i1.lower == i1.upper == i2.lower == i2.upper)
+                elif c == "ne":  # v1 != v2
+                    can_be_true = not (i1.lower == i1.upper == i2.lower == i2.upper)
+                    can_be_false = not (i1 & i2).is_empty
+                elif c == "lt":  # v1 < v2
+                    can_be_true = i1.lower < i2.upper
+                    can_be_false = i1.upper >= i2.lower
+                elif c == "ge":  # v1 >= v2
+                    can_be_true = i1.upper >= i2.lower
+                    can_be_false = i1.lower < i2.upper
+                elif c == "gt":  # v1 > v2
+                    can_be_true = i1.upper > i2.lower
+                    can_be_false = i1.lower <= i2.upper
+                elif c == "le":  # v1 <= v2
+                    can_be_true = i1.lower <= i2.upper
+                    can_be_false = i1.upper > i2.lower
+                else:
+                    can_be_true = True
+                    can_be_false = True
+            
             new_stack = Stack(new_stack_items)
             new_frame = PerVarFrame(locals=frame.locals.copy(), stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
             
-            # Always yield jump branch
-            jump_pc = PC(pc.method, t)
-            jump_state = AState(frames=new_frames, pc=jump_pc)
-            yield jump_state
+            # Only yield feasible branches
+            if can_be_true:
+                jump_pc = PC(pc.method, t)
+                jump_state = AState(frames=new_frames, pc=jump_pc)
+                yield jump_state
             
-            # Always yield fall-through branch
-            fall_pc = pc + 1
-            fall_state = AState(frames=new_frames, pc=fall_pc)
-            yield fall_state
+            if can_be_false:
+                fall_pc = pc + 1
+                fall_state = AState(frames=new_frames, pc=fall_pc)
+                yield fall_state
         case jvm.ArrayLength():
             # Note: ArrayLength appears twice in original code - this is the first occurrence
             # For abstract interpretation without heap, we'll skip this for now
@@ -269,7 +402,8 @@ def step(state: AState) -> Iterable[AState | str]:
             yield new_state
         case jvm.Push(value=v):
             frame = state.frames.peek()
-            new_stack = Stack(frame.stack.items + [v])
+            abs_val = AbstractValue.from_concrete(v)
+            new_stack = Stack(frame.stack.items + [abs_val])
             new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
             new_pc = pc + 1
@@ -280,7 +414,7 @@ def step(state: AState) -> Iterable[AState | str]:
             if not frame.stack.items:
                 return
             v = frame.stack.items[-1]
-            assert v.type == jvm.Int(), f"Wrong type for istore. Found {v}"
+            assert isinstance(v.type, jvm.Int), f"Wrong type for istore. Found {v}"
             
             new_stack = Stack(frame.stack.items[:-1])
             new_locals = frame.locals.copy()
@@ -295,7 +429,7 @@ def step(state: AState) -> Iterable[AState | str]:
             if not frame.stack.items:
                 return
             ref = frame.stack.items[-1]
-            assert ref.type == jvm.Reference(), (
+            assert isinstance(ref.type, jvm.Reference), (
                 "Store requires the popped stack object to be of type Reference or returnAddress"
             )
             
@@ -333,31 +467,43 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
+            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
             
-            # For abstract interpretation, explore both possibilities:
-            # 1. Divisor could be zero -> divide by zero error
-            yield "divide by zero"
+            # Check if divisor interval contains zero
+            if 0 in v2.interval:
+                yield "divide by zero"
             
-            # 2. Divisor could be non-zero -> computation succeeds
-            # Use concrete value if available, or abstract value otherwise
-            result = jvm.Value.int(v1.value // v2.value if v2.value != 0 else 0)
-            new_stack = Stack(frame.stack.items[:-2] + [result])
-            new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
-            new_frames = Stack(state.frames.items[:-1] + [new_frame])
-            new_pc = pc + 1
-            new_state = AState(frames=new_frames, pc=new_pc)
-            yield new_state
+            # If divisor can be non-zero, perform division
+            if v2.interval.lower != 0 or v2.interval.upper != 0:
+                # Conservative interval for division (hard to compute precisely)
+                # Use top element for non-trivial intervals
+                if v2.interval.lower == v2.interval.upper and v2.interval.lower != 0:
+                    # Exact divisor known
+                    divisor = v2.interval.lower
+                    result_interval = Interval(v1.interval.lower // divisor, v1.interval.upper // divisor)
+                else:
+                    # Conservative: use top element
+                    import sys
+                    result_interval = Interval(-sys.maxsize, sys.maxsize)
+                
+                result = AbstractValue.int_interval(result_interval)
+                new_stack = Stack(frame.stack.items[:-2] + [result])
+                new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
+                new_frames = Stack(state.frames.items[:-1] + [new_frame])
+                new_pc = pc + 1
+                new_state = AState(frames=new_frames, pc=new_pc)
+                yield new_state
         case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Sub):
             frame = state.frames.peek()
             if len(frame.stack.items) < 2:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
-            result = jvm.Value.int(v1.value - v2.value)
+            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
+            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
+            result_interval = Arithmetic.sub(v1.interval, v2.interval)
+            result = AbstractValue.int_interval(result_interval)
             new_stack = Stack(frame.stack.items[:-2] + [result])
             new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
@@ -370,9 +516,10 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
-            result = jvm.Value.int(v1.value + v2.value)
+            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
+            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
+            result_interval = Arithmetic.add(v1.interval, v2.interval)
+            result = AbstractValue.int_interval(result_interval)
             new_stack = Stack(frame.stack.items[:-2] + [result])
             new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
@@ -385,9 +532,20 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
-            result = jvm.Value.int(v1.value * v2.value)
+            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
+            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
+            # For multiplication, compute all corner products
+            if not v1.interval.is_empty and not v2.interval.is_empty:
+                products = [
+                    v1.interval.lower * v2.interval.lower,
+                    v1.interval.lower * v2.interval.upper,
+                    v1.interval.upper * v2.interval.lower,
+                    v1.interval.upper * v2.interval.upper
+                ]
+                result_interval = Interval(min(products), max(products))
+            else:
+                result_interval = Interval.empty()
+            result = AbstractValue.int_interval(result_interval)
             new_stack = Stack(frame.stack.items[:-2] + [result])
             new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
@@ -400,9 +558,16 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
-            result = jvm.Value.int(v1.value % v2.value)
+            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
+            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
+            # For remainder, result is bounded by divisor
+            if not v1.interval.is_empty and not v2.interval.is_empty:
+                # Conservative: remainder is in range [-(abs(divisor)-1), abs(divisor)-1]
+                max_abs_divisor = max(abs(v2.interval.lower), abs(v2.interval.upper))
+                result_interval = Interval(-max_abs_divisor + 1, max_abs_divisor - 1)
+            else:
+                result_interval = Interval.empty()
+            result = AbstractValue.int_interval(result_interval)
             new_stack = Stack(frame.stack.items[:-2] + [result])
             new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
@@ -429,9 +594,11 @@ def step(state: AState) -> Iterable[AState | str]:
             if idx not in frame.locals:
                 return
             v = frame.locals[idx]
-            assert v.type is jvm.Int(), f"expected int, but got {v}"
+            assert isinstance(v.type, jvm.Int), f"expected int, but got {v}"
             new_locals = frame.locals.copy()
-            new_locals[idx] = jvm.Value.int(v.value + n)
+            n_interval = Interval(n, n)
+            result_interval = Arithmetic.add(v.interval, n_interval)
+            new_locals[idx] = AbstractValue.int_interval(result_interval)
             new_frame = PerVarFrame(locals=new_locals, stack=frame.stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
             new_pc = pc + 1
@@ -527,3 +694,14 @@ else:
 
 logger.info(f"The following final states {final} are possible")
 logger.info(f"Total states explored: {len(sts.per_inst)}")
+
+# Output final intervals at each program point
+logger.info("")
+logger.info("Final abstract values at each program point:")
+for pc in sorted(sts.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
+    state = sts.per_inst[pc]
+    if state.frames.items:
+        frame = state.frames.items[-1]
+        locals_str = ", ".join(f"v{k}={v.interval}" for k, v in sorted(frame.locals.items()) if isinstance(v, AbstractValue))
+        stack_str = ", ".join(f"{v.interval}" for v in frame.stack.items if isinstance(v, AbstractValue))
+        logger.info(f"  {pc}: locals=[{locals_str}] stack=[{stack_str}]")
