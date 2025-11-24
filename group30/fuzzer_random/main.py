@@ -20,6 +20,12 @@ class RandomStrategy(Strategy):
         stop_event = threading.Event()
 
         def fuzz_loop(stop_event):
+            if not self.method_signature.extension.params:
+                input_val = []
+                method_input: Input = Input(values=(*input_val,))
+                outputs_encountered.add(interpreter.run(self.method_signature, method_input, stop_event))
+                return
+
             while not stop_event.is_set():
                 input_val = []
 
@@ -42,6 +48,8 @@ class RandomStrategy(Strategy):
                             array_vals = [chr(random.randint(32, 126)) for _ in range(length)]
                             input_val.append(jvm.Value.array(jvm.Char(), array_vals))
                         case _:
+                            # FIXME: the thread fails but this error is not propagated back
+                            # to the main thread, so we just stop fuzzing here
                             raise NotImplementedError(f"Random input generation not implemented for type: {elem}")
 
                 method_input: Input = Input(values=(*input_val,))
