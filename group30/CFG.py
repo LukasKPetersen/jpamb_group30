@@ -304,6 +304,14 @@ class CFG:
                     node = self.generate_terminating_node(offset_start, pc.offset, opr)
                     pc += 1
                     return node
+                case jvm.Get(field=f):
+                    s = str(f).split('.')
+                    assert len(s) == 2, "There is not 1 '.' in the field string, opr: get"
+                    if (s[1] == "$assertionsDisabled:Z"):
+                        # Skip the next if-statement checking for assertionsDisabled
+                        pc += 2
+                    else:
+                        pc += 1
                 case jvm.InvokeSpecial(method=method_name):
                     string_method = str(method_name)[:24]
                     assert string_method == "java/lang/AssertionError", f"Only assertion errors are handled so far, not {string_method}"
@@ -529,4 +537,4 @@ def visualize_cfg_pyvis(cfg):
     net.write_html("cfg.html", open_browser=True)
     print("Wrote cfg.html")
 
-# visualize_cfg_pyvis(cfg)
+visualize_cfg_pyvis(cfg)

@@ -17,6 +17,10 @@ class PC:
     method: jvm.AbsMethodID
     offset: int
 
+    def __isub__(self, delta):
+        self.offset -= delta
+        return self
+    
     def __iadd__(self, delta):
         self.offset += delta
         return self
@@ -83,6 +87,7 @@ class Frame:
     locals: dict[int, jvm.Value]
     stack: Stack[jvm.Value]
     pc: PC
+    disable_ifz_assertionsDisabled: bool = False
 
     def __str__(self):
         locals = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
@@ -97,6 +102,7 @@ class Frame:
 class State:
     heap: dict[int, jvm.Value]
     frames: Stack[Frame]
+
 
     def __str__(self):
         return f"{self.heap} {self.frames}"
@@ -115,6 +121,7 @@ def step(state: State, traversed_edges=None) -> State | str:
             assert len(s) == 2, "There is not 1 '.' in the field string, opr: get"
             if (s[1] == "$assertionsDisabled:Z"):
                 # We always assume assertions are enabled
+                frame.disable_ifz_assertionsDisabled = True
                 frame.stack.push(jvm.Value(type=jvm.Int(), value=0))
                 frame.pc += 1
                 return state
@@ -137,6 +144,12 @@ def step(state: State, traversed_edges=None) -> State | str:
         case jvm.Ifz(condition=c, target=t):
             v = frame.stack.pop()
             v_value = v.value
+
+            if frame.disable_ifz_assertionsDisabled:
+                # Handling assertionsDisabled
+                frame.disable_ifz_assertionsDisabled = False
+                frame.pc += 1
+                return state
 
             if v.type is jvm.Boolean():
                 v_value = 0 if v.value == False else 1

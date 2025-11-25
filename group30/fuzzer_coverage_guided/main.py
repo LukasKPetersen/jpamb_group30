@@ -123,8 +123,6 @@ class CoverageGuidedStrategy(Strategy):
                 outputs_encountered.add(state)
                 traversed_edges = self.cfg.convert_to_set_of_edges(traversed_edges)
 
-                logger.debug(f"Edge difference: {len(self.global_coverage) < len(self.all_edges)}")
-                logger.debug(f"Edge difference: {len(traversed_edges.difference(self.global_coverage))}")
                 if len(traversed_edges.difference(self.global_coverage)) != 0:
 
                     # Found interesting new edges - interesting input!
