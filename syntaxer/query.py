@@ -95,12 +95,10 @@ def static_integer_query(body_node):
     int_q = tree_sitter.Query(JAVA_LANGUAGE, """(decimal_integer_literal) @int""")
     found = find_all_captures(int_q, body_node, "int")
     if found:
-        log.debug("Static integers found")
         # Extract integer values from nodes
         integer_values = [int(node.text.decode('utf-8')) for node in found]
         return integer_values
     else:
-        log.debug("No static integers found")
         return []
 
 

@@ -51,8 +51,6 @@ suite = jpamb.Suite()
 log.debug(f"Input parameter types (JVM): {input_param_types}")
 
 final_states, input_intervals = abstract_interpretation(suite, methodid, input_param_types, K)
-log.debug(f"Final abstract states: {final_states}")
-log.debug(f"Input intervals for fuzzing: {[str(iv) for iv in input_intervals]}")
 
 # Print results for jpamb test framework
 print(f"Possible outcomes: {final_states}")

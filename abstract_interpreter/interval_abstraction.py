@@ -146,7 +146,11 @@ class Interval:
             return other
         if other.is_empty:
             return self
-        return Interval(min(self.lower, other.lower), max(self.upper, other.upper))
+        # Preserve K from self (or other if self has no K)
+        K = self.K if self.K else other.K
+        result = Interval(min(self.lower, other.lower), max(self.upper, other.upper))
+        result.K = K
+        return result
 
     # meet '∩' operator (for lattice functionality)
     def __and__(self, other: "Interval") -> "Interval":
@@ -257,17 +261,22 @@ class Interval:
         lower = min_K_J(self.lower, other.lower, self.K)
         upper = max_K_J(self.upper, other.upper, self.K)
         result = Interval(lower, upper)
+        result.K = self.K  # Preserve K
         logger.debug(f"Widening result: {result}")
         return result
 
 class Arithmetic:
     @staticmethod
     def add(a: Interval, b: Interval) -> Interval:
-        return Interval(a.lower + b.lower, a.upper + b.upper)
+        result = Interval(a.lower + b.lower, a.upper + b.upper)
+        result.K = a.K if a.K else b.K  # Preserve K
+        return result
     
     @staticmethod
     def sub(a: Interval, b: Interval) -> Interval:
-        return Interval(a.lower - b.upper, a.upper - b.lower)
+        result = Interval(a.lower - b.upper, a.upper - b.lower)
+        result.K = a.K if a.K else b.K  # Preserve K
+        return result
     
     @staticmethod
     def mul(a: Interval, b: Interval) -> Interval:
@@ -277,7 +286,9 @@ class Arithmetic:
             a.upper * b.lower,
             a.upper * b.upper,
         ]
-        return Interval(min(products), max(products))
+        result = Interval(min(products), max(products))
+        result.K = a.K if a.K else b.K  # Preserve K
+        return result
     
     @staticmethod
     def div(a: Interval, b: Interval) -> Interval:

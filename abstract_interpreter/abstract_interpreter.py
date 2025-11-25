@@ -30,6 +30,7 @@ class PC:
 class Bytecode:
     suite: jpamb.Suite
     methods: dict[jvm.AbsMethodID, list[jvm.Opcode]]
+    K: set  # Constants for interval widening
 
     def __getitem__(self, pc: PC) -> jvm.Opcode:
         try:
@@ -414,7 +415,13 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             yield new_state
         case jvm.Push(value=v):
             frame = state.frames.peek()
-            abs_val = AbstractValue.from_concrete(v)
+            # Create interval with K initialized for proper widening
+            if isinstance(v.type, jvm.Int):
+                interval = Interval(v.value, v.value)
+                interval.init_K(bc.K)
+                abs_val = AbstractValue(type=jvm.Int(), interval=interval)
+            else:
+                abs_val = AbstractValue.from_concrete(v)
             new_stack = Stack(frame.stack.items + [abs_val])
             new_frame = PerVarFrame(locals=frame.locals, stack=new_stack)
             new_frames = Stack(state.frames.items[:-1] + [new_frame])
@@ -675,16 +682,7 @@ def manystep(sts : StateSet, bc: Bytecode) -> Iterable[AState | str]:
     for pc, state in sts.per_instruction():
         yield from step(state, bc)
 
-# The input (how though?)
-# suite = jpamb.Suite()
-# bc = Bytecode(suite, dict())
-# methodid, input = jpamb.getcase()
-# print(f"This is the methodid: {methodid}\nThis is the input: {input}")
-
-def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
-    logger.debug(f"Received input types: {input_types}")
-    logger.debug(f"Received K (constants): {K}")
-    
+def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):    
     # Create initial input intervals before any analysis
     # These represent the narrowest intervals that cover all constants K
     initial_input_intervals = []
@@ -704,8 +702,8 @@ def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
     
     logger.debug(f"Initial input intervals: {[str(iv) for iv in initial_input_intervals]}")
     
-    # load bytecode
-    bc = Bytecode(suite, dict())
+    # load bytecode with constants K
+    bc = Bytecode(suite, dict(), K if K else set())
 
     # perform abstract interpretation
     MAX_STEPS = 100
@@ -724,20 +722,30 @@ def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
                 sts |= s
     else:
         logger.warning(f"Reached MAX_STEPS ({MAX_STEPS}) without convergence")
+        # If we hit max steps without converging, there's likely an infinite loop
+        final.add("*")
+
+    # If we reached a fixed point but have no final outcomes, check for infinite loops
+    # An infinite loop occurs when there are explored states but no terminal outcomes
+    if not final and len(sts.per_inst) > 0:
+        logger.debug("No terminal outcomes found but states were explored - infinite loop detected")
+        final.add("*")
 
     logger.debug(f"The following final states {final} are possible")
     logger.debug(f"Total states explored: {len(sts.per_inst)}")
 
-    ## Output final intervals at each program point
-    # logger.debug("")
-    # logger.debug("Final abstract values at each program point:")
-    # for pc in sorted(sts.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
-    #     state = sts.per_inst[pc]
-    #     if state.frames.items:
-    #         frame = state.frames.items[-1]
-    #         locals_str = ", ".join(f"v{k}={v.interval}" for k, v in sorted(frame.locals.items()) if isinstance(v, AbstractValue))
-    #         stack_str = ", ".join(f"{v.interval}" for v in frame.stack.items if isinstance(v, AbstractValue))
-    #         logger.debug(f"  {pc}: locals=[{locals_str}] stack=[{stack_str}]")
+    print_more = False
+    if print_more:
+        ## Output final intervals at each program point
+        logger.debug("")
+        logger.debug("Final abstract values at each program point:")
+        for pc in sorted(sts.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
+            state = sts.per_inst[pc]
+            if state.frames.items:
+                frame = state.frames.items[-1]
+                locals_str = ", ".join(f"v{k}={v.interval}" for k, v in sorted(frame.locals.items()) if isinstance(v, AbstractValue))
+                stack_str = ", ".join(f"{v.interval}" for v in frame.stack.items if isinstance(v, AbstractValue))
+                logger.debug(f"  {pc}: locals=[{locals_str}] stack=[{stack_str}]")
     
     # Return the initial input intervals (computed before analysis)
     # These represent the narrowest intervals needed to trigger all explored behaviors
