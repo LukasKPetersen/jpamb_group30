@@ -102,11 +102,12 @@ class State:
         return f"{self.heap} {self.frames}"
 
 
-def step(state: State) -> State | str:
+def step(state: State, traversed_edges=None) -> State | str:
     assert isinstance(state, State), f"expected frame but got {state}"
     frame = state.frames.peek()
     opr = bc[frame.pc]
     logger.debug(f"STEP {opr}\n{state}")
+
     match opr:
         case jvm.Get(field=f, static=s):
             # We assume that the field only has one '.'
@@ -121,6 +122,11 @@ def step(state: State) -> State | str:
                 raise NotImplementedError(f"For jvm.Get in the stepping function. Do not know how to handle: {f}")
         case jvm.Goto(target=t):
             # An unconditional jump to offset = target
+            
+            # Collect edges for Coverage-guided fuzzing
+            if traversed_edges is not None:
+                traversed_edges.append(((frame.pc.offset, frame.pc.method), (t, frame.pc.method)))
+
             frame.pc.set(t)
             return state
         case jvm.New(classname=c):
@@ -146,10 +152,19 @@ def step(state: State) -> State | str:
                 case "le" : jump = (v_value <= 0)
 
             if jump:
+                # Collect edges for Coverage-guided fuzzing
+                if traversed_edges is not None:
+                    traversed_edges.append(((frame.pc.offset, frame.pc.method), (t, frame.pc.method)))
+
                 # Jump to target
                 frame.pc.set(t)
             else:
                 # Continue without jumping
+
+                # Collect edges for Coverage-guided fuzzing
+                if traversed_edges is not None:
+                    traversed_edges.append(((frame.pc.offset, frame.pc.method), (frame.pc.offset + 1, frame.pc.method)))
+
                 frame.pc += 1
             return state
         case jvm.If(condition=c, target=t):
@@ -173,8 +188,16 @@ def step(state: State) -> State | str:
                 case "le" : jump = (value1 <= value2)
 
             if jump:
+                # Collect edges for Coverage-guided fuzzing
+                if traversed_edges is not None:
+                    traversed_edges.append(((frame.pc.offset, frame.pc.method), (t, frame.pc.method)))
+
                 frame.pc.set(t)
             else:
+                # Collect edges for Coverage-guided fuzzing
+                if traversed_edges is not None:
+                    traversed_edges.append(((frame.pc.offset, frame.pc.method), (frame.pc.offset + 1, frame.pc.method)))
+
                 frame.pc += 1
 
             return state
@@ -338,9 +361,17 @@ def step(state: State) -> State | str:
             v1 = frame.stack.pop()
             state.frames.pop()
             if state.frames:
+                prev_offset = frame.pc.offset
+                prev_method = frame.pc.method
+
                 frame = state.frames.peek()
                 frame.stack.push(v1)
                 frame.pc += 1
+
+                # Collect edges for Coverage-guided fuzzing
+                if traversed_edges is not None:
+                    traversed_edges.append(((prev_offset, prev_method), (frame.pc.offset, frame.pc.method)))
+
                 return state
             else:
                 return "ok"
@@ -348,9 +379,16 @@ def step(state: State) -> State | str:
             # Pop the current frame
             state.frames.pop()
             if state.frames:
+                prev_offset = frame.pc.offset
+                prev_method = frame.pc.method
                 # Increment program counter
                 frame = state.frames.peek()
                 frame.pc += 1
+
+                # Collect edges for Coverage-guided fuzzing
+                if traversed_edges is not None:
+                    traversed_edges.append(((prev_offset, prev_method), (frame.pc.offset, frame.pc.method)))
+
                 return state
             else:
                 return "ok"
@@ -389,6 +427,12 @@ def step(state: State) -> State | str:
             for i in range(len(static_methodid.methodid.params._elements)-1, -1, -1):
                 v = frame.stack.pop()
                 new_frame.locals[i] = v
+            
+            # Collect edges for Coverage-guided fuzzing
+            if traversed_edges is not None:
+                # We also need the from method, so the tuple should contain 4 values
+                traversed_edges.append(((frame.pc.offset, frame.pc.method), (new_frame.pc.offset, new_frame.pc.method))) # methodid to new method
+
             state.frames.push(new_frame)
             # Do not increment program counter (first increment after the callee method returns)
             return state
@@ -397,7 +441,7 @@ def step(state: State) -> State | str:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
 
-def run(methodid: jvm.AbsMethodID, input: Input, stop_event) -> str:
+def run(methodid: jvm.AbsMethodID, input: Input, stop_event, return_edges_flag: bool = False):
     frame = Frame.from_method(methodid)
     state = State({}, Stack.empty())
 
@@ -418,14 +462,30 @@ def run(methodid: jvm.AbsMethodID, input: Input, stop_event) -> str:
 
     state.frames.push(frame)
 
-    for x in range(100000):
-        if stop_event.is_set():
-            return "not done"
-        
+    if return_edges_flag:
+        traversed_edges: list[tuple[(int, jvm.AbsMethodID),(int,jvm.AbsMethodID)]] = []
+        for x in range(100000):
+            # if stop_event.is_set():
+            #     return "not done"
+            
 
-        state = step(state)
-        if isinstance(state, str):
-            return state
+            state = step(state, traversed_edges)
+            if isinstance(state, str):
+                # return a tuple with both the state and the traversed edges
+                return (state, traversed_edges)
+    else:
+        for x in range(100000):
+            if stop_event.is_set():
+                return "not done"
+            
+
+            state = step(state)
+            if isinstance(state, str):
+                # Just return a string
+                return state
         
     # did not terminate within 100000 steps (chance of infinite run?)
-    return "*"
+    if return_edges_flag:
+        return ("*", traversed_edges)
+    else:
+        return "*"

@@ -25,6 +25,7 @@ class Node:
         return curr
 
     def is_final_node(self):
+        # Meaning it either is a Return node or a throw assertion error node
         if self.byte_code == None:
             return False
         else:
@@ -50,22 +51,26 @@ class Edge:
         self.end_node = end_node
         self.branch_opcode = branch_opcode
         self.eval = eval
+        self.id = (self.start_node.offset_end, self.end_node.offset_start)
+
+    def __repr__(self):
+        return f"Edge({self.start_node} -> {self.end_node})"
 
     def __str__(self):
         return f"Edge: {self.start_node} -> {self.end_node}"
 
 class CFG:
     registry: dict[jvm.AbsMethodID, "CFG"] = {}
-    cfg_global_counter = 0
+    cfg_global_counter = -1
     global_method_cache = {}
 
     bc_length: int
     nodes: dict[int, Node] # key is the start offset of the block
 
-    def __init__(self, suite, methodid: jvm.AbsMethodID):
+    def __init__(self, suite, methodid: jvm.AbsMethodID, cfg_id=0):
         self.suite = suite
         self.methodid = methodid
-        self.cfg_id = CFG.next_cfg_id()
+        self.cfg_id = cfg_id
         self.nodes = {} 
         self.node_counter = 0
         self.bc = Bytecode(suite, CFG.global_method_cache)
@@ -77,6 +82,34 @@ class CFG:
 
         # Now actually build
         self.generate_cfg(self.methodid)
+
+        # Assign global init node *once*
+        if self.cfg_id == 0:
+            CFG.global_init_node = self.init_node
+
+    def convert_to_set_of_edges(self, s: list[tuple[(int,jvm.AbsMethodID),(int,jvm.AbsMethodID)]]):
+        set_of_edges: set[Edge] = set()
+        n = self.init_node
+
+        for tup in s:
+            from_tup, to_tup = tup
+            from_offset, from_method = from_tup
+            to_offset, to_method = to_tup
+
+            assert n.offset_end == from_offset, f"Logic fails in 'convert_to_set_of_edges()'. Offsets do not match: {n.offset_end} != {from_offset}"
+            for e in n.child_edges:
+                if (e.end_node.offset_start == to_offset and 
+                    CFG.registry[from_method].cfg_id == n.cfg_id and
+                    CFG.registry[to_method].cfg_id == e.end_node.cfg_id):
+
+                    set_of_edges.add(e)
+                    n = e.end_node
+                    break
+            else:
+                raise LookupError("LookupError: Was not able to find edges in 'convert_to_set_of_edges'")
+
+        return set_of_edges
+
 
     @classmethod
     def next_cfg_id(cls):
@@ -101,11 +134,15 @@ class CFG:
             if n.offset_end is None or offset_end > n.offset_end:
                 n.offset_end = offset_end
         return n
-        # if offset_start not in self.nodes:
-        #     self.nodes[offset_start] = Node(self.new_node_id(), offset_start, offset_end, self.cfg_id)           
-        #     return self.nodes[offset_start]
-        # else:
-        #     return self.nodes[offset_start]
+    
+    def extract_all_edges(self):
+        all_edges = set()
+        for cfg in CFG.registry.values():
+            for node in cfg.nodes.values():
+                for edge in node.child_edges:
+                    if edge not in all_edges:
+                        all_edges.add(edge)
+        return all_edges
         
     def generate_basic_node(self, offset_start: int, target: int, byte_code: jvm.Opcode, pc: PC, branching: bool):
         node = self.add_node(offset_start, pc.offset)
@@ -123,7 +160,7 @@ class CFG:
             pc_copy = copy.copy(pc)
             pc_copy.set(target)
 
-            new_node_1 = self.build(pc, pc.offset, target)
+            new_node_1 = self.build(pc, pc.offset)
             new_node_2 = self.build(pc_copy, pc_copy.offset)
 
             edge_1 = Edge(node, new_node_1, byte_code, False)
@@ -141,7 +178,7 @@ class CFG:
                     target_node = self.nodes[target]
                 else:
                     # Find and split the existing block
-                    for start_off, n in sorted(self.nodes.items()):
+                    for _, n in sorted(self.nodes.items()):
                         if n.offset_start < target <= n.offset_end:
                             
                             # 1. Create lower half
@@ -243,16 +280,8 @@ class CFG:
                 curr_max_offset = node.offset_end
 
         return is_valid
-            # for node_name, node in self.nodes.items():
-            #     # Find overlapping offsets between nodes
-            #     if node.offset_start <= curr_max_offset and node.cfg_id : 
-            #         print(f"Block {node} start offset {node.offset_start} overlaps block {self.nodes[node_name-1]}'s end offset {curr_max_offset}")
-            #         is_not_valid = False
-            #     curr_max_offset = node.offset_end
 
-
-
-    def build(self, pc, offset_start=0, cut_off_offset=None):
+    def build(self, pc, offset_start=0):
 
         self.bc[pc] # Used to extract the length
         self.bc_length = len(self.bc.methods[self.methodid])
@@ -260,11 +289,7 @@ class CFG:
         while pc.offset < self.bc_length:
 
             opr = self.bc[pc]
-            # avoid duplication of nodes
-            # if self.cfg_id == 1:
-                # print(f"offset {pc.offset}, opr: {opr}")
-                # print(f"bc_length: {self.bc_length}")
-                #for m in self.bc.methods[method]
+
             match opr:
                 case jvm.If(target=t) | jvm.Ifz(target=t):
                     # recursive call must be qualified on the instance (self)
@@ -299,13 +324,10 @@ class CFG:
                         pc += 1
                         continuation_node = self.build(pc, pc.offset)
 
-                        # callee_cfg = CFG.registry.get(callee_methodid)
 
                         # A recursive call always points back to entry
-                        #continuation_edge = Edge(callsite_node, continuation_node, None, None)
                         rec_edge = Edge(callsite_node, self.init_node, opr, None)
 
-                        #callsite_node.child_edges.append(continuation_edge)
                         callsite_node.child_edges.append(rec_edge)
 
                         # When fib returns, control continues at continuation
@@ -323,7 +345,6 @@ class CFG:
 
                         return callsite_node
                     else:
-                        # print(f"Offset {pc.offset} and method invoked: {callee_methodid}")
                         # ---- CALL SITE handling ----
                         # 1) create call-site node covering offset_start..pc.offset (include invoke)
                         callsite_node = self.add_node(offset_start, pc.offset)
@@ -337,7 +358,7 @@ class CFG:
                         # 3) ensure callee CFG exists (register-only if recursive)
                         # Ensure CFG exists exactly once
                         if callee_methodid not in CFG.registry:
-                            CFG(self.suite, callee_methodid)
+                            CFG(self.suite, callee_methodid, len(CFG.registry))
 
                         callee_cfg = CFG.registry[callee_methodid]
                         # 4) add call edge callsite -> callee.entry
@@ -445,7 +466,9 @@ suite = jpamb.Suite()
 
 cfg = CFG(suite, methodid) # Create CFG
 
-cfg.print_graph_param()
+# print(cfg.extract_all_edges())
+
+# cfg.print_graph_param()
 
 if cfg.check_nodes_valid() is False:
     print(" ** Network not valid! ** ")
@@ -474,8 +497,6 @@ def visualize_cfg_pyvis(cfg):
                 color="lightgreen" if node == cfg.init_node else "lightblue",
                 size=25 if node == cfg.init_node else 20,
                 font={"size": 16})
-        # net.add_node(id(node),
-        #              label=f"{node}\n{{{node.offsets()}}}")
 
         for edge in node.child_edges:
             if edge.end_node.is_final_node():
@@ -501,8 +522,6 @@ def visualize_cfg_pyvis(cfg):
                          font={"size": 20, "align": "top"},
                          arrows="to")
 
-            # net.add_edge(id(node), id(edge.end_node),
-            #              label=f"{str(edge.branch_opcode)} : {str(edge.eval)}")
             dfs(edge.end_node)
 
     dfs(cfg.init_node)
@@ -510,4 +529,4 @@ def visualize_cfg_pyvis(cfg):
     net.write_html("cfg.html", open_browser=True)
     print("Wrote cfg.html")
 
-visualize_cfg_pyvis(cfg)
+# visualize_cfg_pyvis(cfg)
