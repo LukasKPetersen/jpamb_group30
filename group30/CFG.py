@@ -87,7 +87,7 @@ class CFG:
         if self.cfg_id == 0:
             CFG.global_init_node = self.init_node
 
-    def convert_to_set_of_edges(self, s: list[tuple[(int,jvm.AbsMethodID),(int,jvm.AbsMethodID)]]):
+    def convert_to_set_of_edges(self, s: list[tuple[(int,jvm.AbsMethodID),(int,jvm.AbsMethodID)]]) -> set[Edge]:
         set_of_edges: set[Edge] = set()
         n = self.init_node
 

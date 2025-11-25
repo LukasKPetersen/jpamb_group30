@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
-from fuzzer_random.main import RandomFuzzer, CoverageGuidedStrategy
+from fuzzer_coverage_guided.main import CoverageGuidedStrategy
+from fuzzer_random.main import RandomFuzzer
 import jpamb
 
 
@@ -32,4 +33,4 @@ else:
 # fuzzer = RandomFuzzer(method_signature, argument)
 fuzzer = CoverageGuidedStrategy(method_signature, argument)
 
-# fuzzer.run()
+fuzzer.run()

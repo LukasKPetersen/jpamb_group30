@@ -465,8 +465,8 @@ def run(methodid: jvm.AbsMethodID, input: Input, stop_event, return_edges_flag: 
     if return_edges_flag:
         traversed_edges: list[tuple[(int, jvm.AbsMethodID),(int,jvm.AbsMethodID)]] = []
         for x in range(100000):
-            # if stop_event.is_set():
-            #     return "not done"
+            if stop_event.is_set():
+                return ("not done", traversed_edges)
             
 
             state = step(state, traversed_edges)
