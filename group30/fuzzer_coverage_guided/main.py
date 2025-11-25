@@ -6,13 +6,43 @@ from fuzzer import Fuzzer, Strategy
 from jpamb import jvm
 import jpamb
 from jpamb.model import Input
+from CFG import CFG, Node, Edge
+import queue
 
-class RandomStrategy(Strategy):
+class CoverageGuidedStrategy(Strategy):
     """ Random input generation strategy. """
     def __init__(self, method_signature: jvm.AbsMethodID, argument: None|Input):
         self.method_signature = method_signature
         self.argument = argument # FIXME: is this needed???
+        # Yes, we need argument. Create methods to 
+        self.cfg = CFG(jpamb.Suite(), self.method_signature)
+        self.all_edges = self.cfg.extract_all_edges() # A set with all edges
+        self.global_coverage: set[Edge] = {} 
         self.checked = set()
+
+        state, traversed_edges = interpreter.run(method_signature, argument, None, True)
+
+        traversed_edges = self.cfg.convert_to_set_of_edges(traversed_edges)
+        
+
+    def mutate_input(self, input: jvm.Value):
+
+        match input.type:
+            case jvm.Int():
+                # Just doing one form of mutation to input
+                v = input.value
+                v + random.randint(-10, 10) # small range
+                input.value = v
+                # Following methods for mutations (int):
+                # 1 small integer decrements/increments
+                # 2 add/subtract a small range (what we do now)
+                # 3 bit flips
+                # 4 replace with a random integer (fallback)
+                # 5 interesting values (which is a specific set of values that are good to test with)
+            case _:
+                raise NotImplementedError(f"Mutation not implemented for type: {input}")
+            
+        return input
     
     def run(self):
         # Set of actual program execution outputs encountered (ok, divide by zero, etc.)
@@ -63,12 +93,3 @@ class RandomStrategy(Strategy):
                 continue
             print(f"{output};100%")
         exit(0)
-
-
-# completely random inputs
-class RandomFuzzer(Fuzzer):
-    """ Fuzzer that generates completely random inputs. """
-    def __init__(self, method_signature: jvm.AbsMethodID, argument: None|Input):
-
-        strategy = RandomStrategy(method_signature, argument)
-        super().__init__(strategy)
