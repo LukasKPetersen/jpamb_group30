@@ -12,7 +12,6 @@ log = logging
 log.basicConfig(level=logging.DEBUG)
 
 def class_query(tree, class_name):
-    log.debug(f"Searching for class: {class_name}")
 
     # treesitter query
     class_q = tree_sitter.Query(
@@ -24,7 +23,6 @@ def class_query(tree, class_name):
     )
 
     for node in tree_sitter.QueryCursor(class_q).captures(tree.root_node)["class"]:
-        log.debug("Found class '%s' in range: %s", class_name, node.range)
         return node
 
     log.error(f"FAIL: Could not find a class of name '{class_name}'")
@@ -32,7 +30,6 @@ def class_query(tree, class_name):
 
 
 def method_query(class_node, method_name, method_params):
-    log.debug(f"Searching for method {method_name}")
 
     method_q = tree_sitter.Query(
         JAVA_LANGUAGE,
@@ -46,7 +43,6 @@ def method_query(class_node, method_name, method_params):
 
         # verify that parameters exist
         if not (p := node.child_by_field_name("parameters")):
-            log.debug(f"Could not find parameteres of {method_name}")
             continue
 
         params = [c for c in p.children if c.type == "formal_parameter"]
@@ -63,10 +59,7 @@ def method_query(class_node, method_name, method_params):
                 break
 
             # todo check for type.
-            log.debug(f"Parameter text: {tp.text}")
-            log.debug(f"Expected type: {tn}")
         else:
-            log.debug("Found method '%s' in range: %s", method_name, node.range)
             return node
     else:
         log.warning(f"FAIL: could not find a method of name {method_name} in the class")
@@ -86,9 +79,13 @@ def input_value_query(node):
     input_q = tree_sitter.Query(JAVA_LANGUAGE, """(formal_parameter) @input""")
     found = find_all_captures(input_q, node, "input")
     if found:
-        log.debug("Input values found")
-        # Extract input parameter names from nodes
-        input_params = [param.child_by_field_name("name").text.decode('utf-8') for param in found]
+        # Extract input parameter names and types from nodes
+        input_params = []
+        for param in found:
+            name = param.child_by_field_name("name").text.decode('utf-8')
+            type_node = param.child_by_field_name("type")
+            param_type = type_node.text.decode('utf-8') if type_node else "unknown"
+            input_params.append({"name": name, "type": param_type})
         return input_params
     else:
         log.debug("No input values found")

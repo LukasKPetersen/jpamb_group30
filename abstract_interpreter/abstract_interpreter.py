@@ -7,13 +7,9 @@ from interval_abstraction import Interval, Arithmetic
 
 import sys
 from loguru import logger
-from typing import Set
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}")
-
-methodid, input = jpamb.getcase()
-print(f"This is the methodid: {methodid}\nThis is the input: {input}")
 
 @dataclass(frozen=True)
 class PC:
@@ -71,10 +67,6 @@ class Stack[T]:
             return "ϵ"
         return "".join(f"{v}" for v in self.items)
 
-
-suite = jpamb.Suite()
-bc = Bytecode(suite, dict())
-
 V = TypeVar("V") # Value
 AV = TypeVar("AV") # Abstract Value
 
@@ -85,6 +77,24 @@ class AbstractValue:
     interval: Interval
     
     @classmethod
+    def from_concrete_w_K(cls, K, type: jvm.Type) -> "AbstractValue":
+        """Convert concrete JVM value to abstract value with interval initialized from constants K"""
+        if isinstance(type, jvm.Int):
+            if K:
+                # Create interval spanning all constants in K
+                sorted_K = sorted(K)
+                interv = Interval(min(sorted_K), max(sorted_K))
+                interv.init_K(K)
+            else:
+                # No constants provided, use top element
+                import sys
+                interv = Interval(-sys.maxsize, sys.maxsize)
+            return cls(type=jvm.Int(), interval=interv)
+        else:
+            # For non-int types, return with empty interval (not tracked)
+            return cls(type=type, interval=Interval.empty())
+    
+    @classmethod
     def from_concrete(cls, value: jvm.Value) -> "AbstractValue":
         """Convert concrete JVM value to abstract value with interval"""
         if isinstance(value.type, jvm.Int):
@@ -92,6 +102,8 @@ class AbstractValue:
         else:
             # For non-int types, return with empty interval (not tracked)
             return cls(type=value.type, interval=Interval.empty())
+    
+    
     
     @classmethod
     def int_interval(cls, interval: Interval) -> "AbstractValue":
@@ -193,9 +205,9 @@ class AState:
         return AState(frames=joined_frames, pc=self.pc)
 
     @classmethod
-    def initialstate_from_method(cls, methodid: jvm.AbsMethodID, input_values: tuple = ()) -> "StateSet":
+    def initialstate_from_method(cls, methodid: jvm.AbsMethodID, input_types: tuple = (), K=None) -> "StateSet":
         # Initialize locals with input parameters as abstract values with intervals
-        initial_locals = {i: AbstractValue.from_concrete(input_values[i]) for i in range(len(input_values))}
+        initial_locals = {i: AbstractValue.from_concrete_w_K(K, input_types[i]) for i in range(len(input_types))}
         initial_frame = PerVarFrame(locals=initial_locals, stack=Stack.empty())
         initial_pc = PC(method=methodid, offset=0)
         initial_state = cls(frames=Stack([initial_frame]), pc=initial_pc)
@@ -231,12 +243,12 @@ class StateSet:
         return "{" + ", ".join(f"{pc}: {state}" for pc, state in self.per_inst.items()) + "}"
 
 # abstract stepping function
-def step(state: AState) -> Iterable[AState | str]:
+def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
     pc = state.pc
     opr = bc[pc]
-    logger.debug("")
-    logger.debug(f"* STEP {pc}:")
-    logger.debug(f"* - operation: {opr}")
+    # logger.debug("")
+    # logger.debug(f"* STEP {pc}:")
+    # logger.debug(f"* - operation: {opr}")
     
     match opr:
         case jvm.Get(field=f, static=s):
@@ -467,8 +479,6 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
-            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
             
             # Check if divisor interval contains zero
             if 0 in v2.interval:
@@ -500,8 +510,6 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
-            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
             result_interval = Arithmetic.sub(v1.interval, v2.interval)
             result = AbstractValue.int_interval(result_interval)
             new_stack = Stack(frame.stack.items[:-2] + [result])
@@ -516,8 +524,6 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
-            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
             result_interval = Arithmetic.add(v1.interval, v2.interval)
             result = AbstractValue.int_interval(result_interval)
             new_stack = Stack(frame.stack.items[:-2] + [result])
@@ -532,8 +538,6 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
-            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
             # For multiplication, compute all corner products
             if not v1.interval.is_empty and not v2.interval.is_empty:
                 products = [
@@ -558,8 +562,6 @@ def step(state: AState) -> Iterable[AState | str]:
                 return
             v2 = frame.stack.items[-1]
             v1 = frame.stack.items[-2]
-            assert isinstance(v1.type, jvm.Int), f"expected int, but got {v1}"
-            assert isinstance(v2.type, jvm.Int), f"expected int, but got {v2}"
             # For remainder, result is bounded by divisor
             if not v1.interval.is_empty and not v2.interval.is_empty:
                 # Conservative: remainder is in range [-(abs(divisor)-1), abs(divisor)-1]
@@ -594,7 +596,6 @@ def step(state: AState) -> Iterable[AState | str]:
             if idx not in frame.locals:
                 return
             v = frame.locals[idx]
-            assert isinstance(v.type, jvm.Int), f"expected int, but got {v}"
             new_locals = frame.locals.copy()
             n_interval = Interval(n, n)
             result_interval = Arithmetic.add(v.interval, n_interval)
@@ -670,38 +671,77 @@ def step(state: AState) -> Iterable[AState | str]:
             logger.warning(f"Unhandled opcode: {opr!r}")
             yield f"ERROR: Unhandled opcode {opr!r}"
 
-def manystep(sts : StateSet) -> Iterable[AState | str]:
+def manystep(sts : StateSet, bc: Bytecode) -> Iterable[AState | str]:
     for pc, state in sts.per_instruction():
-        yield from step(state)
+        yield from step(state, bc)
 
-# perform abstract interpretation
-MAX_STEPS = 100
-final = set()
-sts = AState.initialstate_from_method(methodid, input.values) # TODO: better naming - ´sts´ refer to set of states
+# The input (how though?)
+# suite = jpamb.Suite()
+# bc = Bytecode(suite, dict())
+# methodid, input = jpamb.getcase()
+# print(f"This is the methodid: {methodid}\nThis is the input: {input}")
 
-for i in range(MAX_STEPS):
-    if not sts.needswork:
-        logger.info(f"Fixed point reached after {i} iterations")
-        break
+def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
+    logger.debug(f"Received input types: {input_types}")
+    logger.debug(f"Received K (constants): {K}")
     
-    for s in manystep(sts):
-        if isinstance(s, str):
-            final.add(s)
+    # Create initial input intervals before any analysis
+    # These represent the narrowest intervals that cover all constants K
+    initial_input_intervals = []
+    for i, typ in enumerate(input_types):
+        if isinstance(typ, jvm.Int):
+            if K:
+                sorted_K = sorted(K)
+                interv = Interval(min(sorted_K), max(sorted_K))
+                interv.init_K(K)
+            else:
+                import sys
+                interv = Interval(-sys.maxsize, sys.maxsize)
+            initial_input_intervals.append(interv)
         else:
-            sts |= s
-else:
-    logger.warning(f"Reached MAX_STEPS ({MAX_STEPS}) without convergence")
+            # Non-int types get empty interval (not tracked)
+            initial_input_intervals.append(Interval.empty())
+    
+    logger.debug(f"Initial input intervals: {[str(iv) for iv in initial_input_intervals]}")
+    
+    # load bytecode
+    bc = Bytecode(suite, dict())
 
-logger.info(f"The following final states {final} are possible")
-logger.info(f"Total states explored: {len(sts.per_inst)}")
+    # perform abstract interpretation
+    MAX_STEPS = 100
+    final = set()
+    sts = AState.initialstate_from_method(methodid, input_types, K) # TODO: better naming - ´sts´ refer to set of states
 
-# Output final intervals at each program point
-logger.info("")
-logger.info("Final abstract values at each program point:")
-for pc in sorted(sts.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
-    state = sts.per_inst[pc]
-    if state.frames.items:
-        frame = state.frames.items[-1]
-        locals_str = ", ".join(f"v{k}={v.interval}" for k, v in sorted(frame.locals.items()) if isinstance(v, AbstractValue))
-        stack_str = ", ".join(f"{v.interval}" for v in frame.stack.items if isinstance(v, AbstractValue))
-        logger.info(f"  {pc}: locals=[{locals_str}] stack=[{stack_str}]")
+    for i in range(MAX_STEPS):
+        if not sts.needswork:
+            logger.debug(f"Fixed point reached after {i} iterations")
+            break
+        
+        for s in manystep(sts, bc):
+            if isinstance(s, str):
+                final.add(s)
+            else:
+                sts |= s
+    else:
+        logger.warning(f"Reached MAX_STEPS ({MAX_STEPS}) without convergence")
+
+    logger.debug(f"The following final states {final} are possible")
+    logger.debug(f"Total states explored: {len(sts.per_inst)}")
+
+    ## Output final intervals at each program point
+    # logger.debug("")
+    # logger.debug("Final abstract values at each program point:")
+    # for pc in sorted(sts.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
+    #     state = sts.per_inst[pc]
+    #     if state.frames.items:
+    #         frame = state.frames.items[-1]
+    #         locals_str = ", ".join(f"v{k}={v.interval}" for k, v in sorted(frame.locals.items()) if isinstance(v, AbstractValue))
+    #         stack_str = ", ".join(f"{v.interval}" for v in frame.stack.items if isinstance(v, AbstractValue))
+    #         logger.debug(f"  {pc}: locals=[{locals_str}] stack=[{stack_str}]")
+    
+    # Return the initial input intervals (computed before analysis)
+    # These represent the narrowest intervals needed to trigger all explored behaviors
+    logger.debug("")
+    logger.debug(f"Narrowest input intervals to trigger all outcomes: {[str(iv) for iv in initial_input_intervals]}")
+    
+    return final, initial_input_intervals

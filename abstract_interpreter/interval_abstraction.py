@@ -1,13 +1,106 @@
 from dataclasses import dataclass
+from logging import log
 from typing import TypeAlias
 from typing import Iterable
 
+from loguru import logger
+import sys
+
+logger.remove()
+logger.add(sys.stderr, format="[{level}] {message}")
+
+class Infinity:
+    """Represents positive or negative infinity"""
+    def __init__(self, positive: bool = True):
+        self.positive = positive
+    
+    def __str__(self):
+        return "∞" if self.positive else "-∞"
+    
+    def __repr__(self):
+        return f"Infinity({self.positive})"
+    
+    def __eq__(self, other):
+        if isinstance(other, Infinity):
+            return self.positive == other.positive
+        return False
+    
+    def __lt__(self, other):
+        if isinstance(other, Infinity):
+            return not self.positive and other.positive
+        return not self.positive  # -inf < any number
+    
+    def __le__(self, other):
+        return self == other or self < other
+    
+    def __gt__(self, other):
+        if isinstance(other, Infinity):
+            return self.positive and not other.positive
+        return self.positive  # +inf > any number
+    
+    def __ge__(self, other):
+        return self == other or self > other
+    
+    def __add__(self, other):
+        if isinstance(other, Infinity):
+            if self.positive != other.positive:
+                raise ValueError("Infinity - Infinity is undefined")
+            return self
+        return self  # inf + number = inf
+    
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __sub__(self, other):
+        if isinstance(other, Infinity):
+            if self.positive == other.positive:
+                raise ValueError("Infinity - Infinity is undefined")
+            return self
+        return self  # inf - number = inf
+    
+    def __rsub__(self, other):
+        # number - inf = -inf (flip sign)
+        return Infinity(not self.positive)
+    
+    def __mul__(self, other):
+        if isinstance(other, Infinity):
+            return Infinity(self.positive == other.positive)
+        if other == 0:
+            return 0
+        # inf * positive = inf, inf * negative = -inf
+        return Infinity(self.positive if other > 0 else not self.positive)
+    
+    def __rmul__(self, other):
+        return self.__mul__(other)
+    
+    def __floordiv__(self, other):
+        if isinstance(other, Infinity):
+            return 0  # inf / inf = 0 (conservative approximation)
+        if other == 0:
+            raise ValueError("Division by zero")
+        return Infinity(self.positive if other > 0 else not self.positive)
+    
+    def __rfloordiv__(self, other):
+        # number / inf = 0
+        return 0
+    
+    def __neg__(self):
+        return Infinity(not self.positive)
+    
+    def __hash__(self):
+        return hash(("Infinity", self.positive))
+
+# Convenient constants
+POS_INF = Infinity(True)
+NEG_INF = Infinity(False)
+
 @dataclass
 class Interval:
-    lower: int
-    upper: int
+    lower: int | Infinity
+    upper: int | Infinity
     # K is the set of all constants of the program (`frozenset` is used to ensure uniqueness)
     K: frozenset[int] = frozenset()
+    use_widening: bool = True
 
     def init_K(self, vals: Iterable[int]):
         self.K = frozenset(sorted(vals))
@@ -19,7 +112,11 @@ class Interval:
     @classmethod
     def empty(cls) -> "Interval":
         # We represent the empty interval by having lower > upper
-        return cls(1, 0)
+        return cls(POS_INF, NEG_INF)
+    
+    @classmethod
+    def universal(cls) -> "Interval":
+        return cls(NEG_INF, POS_INF)
 
     @property
     def is_empty(self) -> bool:
@@ -38,15 +135,20 @@ class Interval:
             return False
         return self.lower >= other.lower and self.upper <= other.upper
 
-    # join operator (for lattice functionality)
+    # join 'U' operator (for lattice functionality)
     def __or__(self, other: "Interval") -> "Interval":
+        logger.debug(f"Joining intervals: {self} | {other}")
+        if self.use_widening:
+            return self.widening(other)
+        
+        logger.debug(f"Joining intervals without widening: {self} | {other}")
         if self.is_empty:
             return other
         if other.is_empty:
             return self
         return Interval(min(self.lower, other.lower), max(self.upper, other.upper))
 
-    # meet operator (for lattice functionality)
+    # meet '∩' operator (for lattice functionality)
     def __and__(self, other: "Interval") -> "Interval":
         if self.is_empty or other.is_empty:
             return Interval.empty()
@@ -66,9 +168,12 @@ class Interval:
     def concrete(cls, interval: "Interval") -> set[int]:
         if interval.is_empty:
             return set()
+        # Cannot concretize infinite intervals
+        if isinstance(interval.lower, Infinity) or isinstance(interval.upper, Infinity):
+            raise ValueError("Cannot concretize an infinite interval")
         return set(range(interval.lower, interval.upper + 1))
 
-    def __contains__(self, member: int):
+    def __contains__(self, member: int | Infinity):
         if self.is_empty:
             return False
         return self.lower <= member <= self.upper
@@ -78,35 +183,82 @@ class Interval:
             return Interval.empty()
         return Arithmetic.add(self, other)
     
+    def __sub__(self, other: "Interval") -> "Interval":
+        if self.is_empty or other.is_empty:
+            return Interval.empty()
+        return Arithmetic.sub(self, other)
+    
+    def __mul__(self, other: "Interval") -> "Interval":
+        if self.is_empty or other.is_empty:
+            return Interval.empty()
+        return Arithmetic.mul(self, other)
+    
+    def __truediv__(self, other: "Interval") -> "Interval":
+        if self.is_empty or other.is_empty:
+            return Interval.empty()
+        return Arithmetic.div(self, other)
+    
     def widening(self, other: "Interval") -> "Interval":
         """Widening operator to ensure convergence in fixpoint computations"""
+        logger.debug(f"Widening: self={self}, other={other}")
         
-        def min_K_J(a: int, b: int, Ks: frozenset[int]) -> int:
+        def min_K_J(a: int | Infinity, b: int | Infinity, Ks: frozenset[int]) -> int | Infinity:
             """Function to return the largest element in K that is less than min(a,b)"""
+            logger.debug(f"min_K_J: a={a}, b={b}, K={Ks}")
+            # If either bound is -inf, return -inf
+            if isinstance(a, Infinity) and not a.positive:
+                logger.debug(f"min_K_J: a is -inf, returning NEG_INF")
+                return NEG_INF
+            if isinstance(b, Infinity) and not b.positive:
+                logger.debug(f"min_K_J: b is -inf, returning NEG_INF")
+                return NEG_INF
             # assume that K is a sorted set
+            if not Ks:
+                logger.debug(f"min_K_J: K is empty, returning NEG_INF")
+                return NEG_INF  # If K is empty, widen to -inf
             ret = next(iter(Ks))
             for k in Ks:
                 if k > min(a, b):
+                    logger.debug(f"min_K_J: found k={k} > min({a},{b}), returning {ret}")
                     return ret
                 else:
                     ret = k
+            logger.debug(f"min_K_J: no k > min({a},{b}), returning {ret}")
             return ret
         
-        def max_K_J(a: int, b: int, Ks: frozenset[int]) -> int:
+        def max_K_J(a: int | Infinity, b: int | Infinity, Ks: frozenset[int]) -> int | Infinity:
             """Function to return the smallest element in K that is greater than max(a,b)"""
+            logger.debug(f"max_K_J: a={a}, b={b}, K={Ks}")
+            # If either bound is +inf, return +inf
+            if isinstance(a, Infinity) and a.positive:
+                logger.debug(f"max_K_J: a is +inf, returning POS_INF")
+                return POS_INF
+            if isinstance(b, Infinity) and b.positive:
+                logger.debug(f"max_K_J: b is +inf, returning POS_INF")
+                return POS_INF
             # assume that K is a sorted set
+            if not Ks:
+                logger.debug(f"max_K_J: K is empty, returning POS_INF")
+                return POS_INF  # If K is empty, widen to +inf
             for k in Ks:
                 if k >= max(a, b):
+                    logger.debug(f"max_K_J: found k={k} >= max({a},{b}), returning {k}")
                     return k
-            return next(iter(reversed(sorted(Ks))))
+            result = next(iter(reversed(sorted(Ks))))
+            logger.debug(f"max_K_J: no k >= max({a},{b}), returning {result}")
+            return result
 
         if self.is_empty:
+            logger.debug(f"Widening: self is empty, returning other={other}")
             return other
         if other.is_empty:
+            logger.debug(f"Widening: other is empty, returning self={self}")
             return self
         lower = min_K_J(self.lower, other.lower, self.K)
         upper = max_K_J(self.upper, other.upper, self.K)
-        return Interval(lower, upper)
+        result = Interval(lower, upper)
+        logger.debug(f"Widening result: {result}")
+        return result
 
 class Arithmetic:
     @staticmethod
@@ -116,3 +268,26 @@ class Arithmetic:
     @staticmethod
     def sub(a: Interval, b: Interval) -> Interval:
         return Interval(a.lower - b.upper, a.upper - b.lower)
+    
+    @staticmethod
+    def mul(a: Interval, b: Interval) -> Interval:
+        products = [
+            a.lower * b.lower,
+            a.lower * b.upper,
+            a.upper * b.lower,
+            a.upper * b.upper,
+        ]
+        return Interval(min(products), max(products))
+    
+    @staticmethod
+    def div(a: Interval, b: Interval) -> Interval:
+        if 0 in b:
+            # Division by interval containing zero results in universal interval
+            return Interval.universal()
+        quotients = [
+            a.lower // b.lower,
+            a.lower // b.upper,
+            a.upper // b.lower,
+            a.upper // b.upper,
+        ]
+        return Interval(min(quotients), max(quotients))
