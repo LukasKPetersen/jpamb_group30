@@ -1,19 +1,25 @@
+"""Tree-sitter query functions for extracting information from Java source code.
+
+This module provides query functions to locate classes, methods, and various
+Java language constructs using tree-sitter.
+"""
 import logging
+import sys
+from pathlib import Path
+
 import tree_sitter
 import tree_sitter_java
 import jpamb
-import sys
-from pathlib import Path
 
 JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
 parser = tree_sitter.Parser(JAVA_LANGUAGE)
 
-log = logging
-log.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
+
+# === Class and Method Queries ===
 
 def class_query(tree, class_name):
-
-    # treesitter query
+    """Find a class node by name in the syntax tree."""
     class_q = tree_sitter.Query(
         JAVA_LANGUAGE,
         f"""
@@ -25,12 +31,12 @@ def class_query(tree, class_name):
     for node in tree_sitter.QueryCursor(class_q).captures(tree.root_node)["class"]:
         return node
 
-    log.error(f"FAIL: Could not find a class of name '{class_name}'")
+    logging.error(f"FAIL: Could not find a class of name '{class_name}'")
     sys.exit(-1)
 
 
 def method_query(class_node, method_name, method_params):
-
+    """Find a method node by name and parameters within a class node."""
     method_q = tree_sitter.Query(
         JAVA_LANGUAGE,
         f"""
@@ -58,70 +64,81 @@ def method_query(class_node, method_name, method_params):
             if tp.text is None:
                 break
 
-            # todo check for type.
+            # TODO: Implement parameter type checking if needed
         else:
             return node
     else:
-        log.warning(f"FAIL: could not find a method of name {method_name} in the class")
+        logging.warning(f"FAIL: Could not find method '{method_name}' in the class")
         sys.exit(-1)
 
+
+# === Query Helper Functions ===
+
 def find_captures(query, node, query_name):
+    """Check if a query matches any nodes."""
     return any(
         capture_name == query_name
         for capture_name, _ in tree_sitter.QueryCursor(query).captures(node).items()
     )
 
+
 def find_all_captures(query, node, query_name):
+    """Get all nodes matching a query capture name."""
     captures = tree_sitter.QueryCursor(query).captures(node)
     return captures.get(query_name, [])
 
+
+# === Data Extraction Queries ===
+
 def input_value_query(node):
+    """Extract input parameter names and types from a parameters node."""
     input_q = tree_sitter.Query(JAVA_LANGUAGE, """(formal_parameter) @input""")
     found = find_all_captures(input_q, node, "input")
-    if found:
-        # Extract input parameter names and types from nodes
-        input_params = []
-        for param in found:
-            name = param.child_by_field_name("name").text.decode('utf-8')
-            type_node = param.child_by_field_name("type")
-            param_type = type_node.text.decode('utf-8') if type_node else "unknown"
-            input_params.append({"name": name, "type": param_type})
-        return input_params
-    else:
-        log.debug("No input values found")
+    if not found:
+        logging.debug("No input values found")
         return []
+    
+    # Extract input parameter names and types from nodes
+    input_params = []
+    for param in found:
+        name = param.child_by_field_name("name").text.decode('utf-8')
+        type_node = param.child_by_field_name("type")
+        param_type = type_node.text.decode('utf-8') if type_node else "unknown"
+        input_params.append({"name": name, "type": param_type})
+    return input_params
+
 
 def static_integer_query(body_node):
+    """Extract all integer literals from a method body."""
     int_q = tree_sitter.Query(JAVA_LANGUAGE, """(decimal_integer_literal) @int""")
     found = find_all_captures(int_q, body_node, "int")
-    if found:
-        # Extract integer values from nodes
-        integer_values = [int(node.text.decode('utf-8')) for node in found]
-        return integer_values
-    else:
+    if not found:
         return []
+    # Extract integer values from nodes
+    return [int(node.text.decode('utf-8')) for node in found]
 
 
-#### Other queries ####
+# === Pattern Detection Queries ===
+# These queries detect specific Java patterns (assertions, division, loops, etc.)
+
 def assert_query(body_node):
+    """Check if the method body contains any assertions."""
     assert_q = tree_sitter.Query(JAVA_LANGUAGE, """(assert_statement) @assert""")
     found = find_captures(assert_q, body_node, "assert")
-    if found:
-        log.debug("Assertion found")
-    else:
-        log.debug("No assertion found")
+    logging.debug("Assertion found" if found else "No assertion found")
     return found
+
 
 def division_query(body_node):
+    """Check if the method body contains division operations."""
     divide_q = tree_sitter.Query(JAVA_LANGUAGE, """(binary_expression operator: "/") @divide""")
     found = find_captures(divide_q, body_node, "divide")
-    if found:
-        log.debug("Division found")
-    else:
-        log.debug("No division found")
+    logging.debug("Division found" if found else "No division found")
     return found
 
+
 def out_of_bounds_query(body_node):
+    """Check if the method body contains potential out-of-bounds access."""
     oob_q = tree_sitter.Query(
         JAVA_LANGUAGE,
         """
@@ -129,16 +146,15 @@ def out_of_bounds_query(body_node):
             name: (identifier) @method-name
             arguments: (argument_list) @args
             (#match? @method-name "get|set|add|remove")) @oob
-        """,
+        """
     )
     found = find_captures(oob_q, body_node, "oob")
-    if found:
-        log.debug("Out of bounds access found")
-    else:
-        log.debug("No out of bounds access found")
+    logging.debug("Out of bounds access found" if found else "No out of bounds access found")
     return found
 
+
 def null_query(body_node):
+    """Check if the method body contains null literals."""
     null_q = tree_sitter.Query(
         JAVA_LANGUAGE,
         """
@@ -146,13 +162,12 @@ def null_query(body_node):
         """,
     )
     found = find_captures(null_q, body_node, "null")
-    if found:
-        log.debug("Null literal found")
-    else:
-        log.debug("No null literal found")
+    logging.debug("Null literal found" if found else "No null literal found")
     return found
 
+
 def array_access_query(body_node):
+    """Check if the method body contains array access operations."""
     array_q = tree_sitter.Query(
         JAVA_LANGUAGE,
         """
@@ -160,13 +175,12 @@ def array_access_query(body_node):
         """,
     )
     found = find_captures(array_q, body_node, "array")
-    if found:
-        log.debug("Array access found")
-    else:
-        log.debug("No array access found")
+    logging.debug("Array access found" if found else "No array access found")
     return found
 
+
 def loop_query(body_node):
+    """Check if the method body contains loops (for or while)."""
     for_q = tree_sitter.Query(
         JAVA_LANGUAGE,
         """
@@ -181,9 +195,6 @@ def loop_query(body_node):
     )
     found_for = find_captures(for_q, body_node, "for")
     found_while = find_captures(while_q, body_node, "while")
-    if found_for or found_while:
-        log.debug("Loop found")
-        return True
-    else:
-        log.debug("No loop found")
-        return False
+    found = found_for or found_while
+    logging.debug("Loop found" if found else "No loop found")
+    return found

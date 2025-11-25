@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
+"""Syntactic analysis module for extracting constants and parameters from Java source.
 
+This module uses tree-sitter to parse Java source files and extract:
+- Static integer constants
+- Method input parameters with their types
+"""
 import logging
+import sys
+from pathlib import Path
+
 import tree_sitter
 import tree_sitter_java
 import jpamb
-import sys
-from pathlib import Path
+
 from . import query
 from . import wager
 
@@ -13,65 +20,42 @@ JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
 parser = tree_sitter.Parser(JAVA_LANGUAGE)
 
 def get_constants(srcfile, methodid):
+    """Extract constants and input parameters from Java source.
     
+    Args:
+        srcfile: Path to the Java source file
+        methodid: Method identifier to analyze
+    
+    Returns:
+        tuple: (sorted_integers, input_params)
+            - sorted_integers: List of integer constants found in the method
+            - input_params: List of dicts with 'name' and 'type' keys for each parameter
+    """
+    # Parse Java source file
     with open(srcfile, "rb") as f:
         tree = parser.parse(f.read())
     
-    ## Class query
+    # Locate class and method nodes
     simple_classname = str(methodid.classname.name)
     class_node = query.class_query(tree, simple_classname)
 
-    ## Method query
     method_name = methodid.extension.name
     method_params = methodid.extension.params
     method_node = query.method_query(class_node, method_name, method_params)
 
-    #### Find interesting input values ####
-    # extract input parameters
-    input_params = method_node.child_by_field_name("parameters")
-    assert input_params and input_params.text
+    # Extract input parameters
+    params_node = method_node.child_by_field_name("parameters")
+    assert params_node and params_node.text, "Method must have parameters node"
+    input_params = query.input_value_query(params_node)
 
-    # query input parameters
-    input_params = query.input_value_query(input_params)
-    param_dict = {}
-    for i, param in enumerate(input_params, start=1):
-        param_dict[param["name"]] = []
-
-    # extract body
+    # Extract method body
     body = method_node.child_by_field_name("body")
-    assert body and body.text
+    assert body and body.text, "Method must have a body"
 
-    # static integers
+    # Extract static integer constants from method body
     static_integers = query.static_integer_query(body)
 
-    printwager = False
-    if printwager:
-        ## Create wager
-        wager = wager.Wager()
-
-        ## Assert query
-        wager.assertion_error = 0.8 if query.assert_query(body) else 0.1
-
-        ## Division query
-        wager.divide_by_zero = 0.7 if query.division_query(body) else 0.01
-
-        ## Null query
-        wager.null_pointer = 0.8 if query.null_query(body) else 0.1
-
-        ## Array query
-        array_access = query.array_access_query(body)
-        if array_access:
-            wager.out_of_bounds = 0.8
-            wager.divide_by_zero = 0.6 # why does this work? 
-        else:
-            wager.out_of_bounds = 0.1
-
-        ## Loop query
-        wager.inf = 0.7 if query.loop_query(body) else 0.1
-
-        ## Print wager
-        wager.print_wager()
+    # Note: Wager-based prediction code is disabled in favor of abstract interpretation
+    # The wager module can still be used for heuristic-based analysis if needed
     
     return sorted(static_integers), input_params
-
-# sys.exit(0)

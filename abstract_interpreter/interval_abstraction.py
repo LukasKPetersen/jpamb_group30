@@ -3,12 +3,6 @@ from logging import log
 from typing import TypeAlias
 from typing import Iterable
 
-from loguru import logger
-import sys
-
-logger.remove()
-logger.add(sys.stderr, format="[{level}] {message}")
-
 class Infinity:
     """Represents positive or negative infinity"""
     def __init__(self, positive: bool = True):
@@ -137,11 +131,9 @@ class Interval:
 
     # join 'U' operator (for lattice functionality)
     def __or__(self, other: "Interval") -> "Interval":
-        logger.debug(f"Joining intervals: {self} | {other}")
         if self.use_widening:
             return self.widening(other)
         
-        logger.debug(f"Joining intervals without widening: {self} | {other}")
         if self.is_empty:
             return other
         if other.is_empty:
@@ -204,65 +196,49 @@ class Interval:
     
     def widening(self, other: "Interval") -> "Interval":
         """Widening operator to ensure convergence in fixpoint computations"""
-        logger.debug(f"Widening: self={self}, other={other}")
         
         def min_K_J(a: int | Infinity, b: int | Infinity, Ks: frozenset[int]) -> int | Infinity:
             """Function to return the largest element in K that is less than min(a,b)"""
-            logger.debug(f"min_K_J: a={a}, b={b}, K={Ks}")
             # If either bound is -inf, return -inf
             if isinstance(a, Infinity) and not a.positive:
-                logger.debug(f"min_K_J: a is -inf, returning NEG_INF")
                 return NEG_INF
             if isinstance(b, Infinity) and not b.positive:
-                logger.debug(f"min_K_J: b is -inf, returning NEG_INF")
                 return NEG_INF
             # assume that K is a sorted set
             if not Ks:
-                logger.debug(f"min_K_J: K is empty, returning NEG_INF")
                 return NEG_INF  # If K is empty, widen to -inf
             ret = next(iter(Ks))
             for k in Ks:
                 if k > min(a, b):
-                    logger.debug(f"min_K_J: found k={k} > min({a},{b}), returning {ret}")
                     return ret
                 else:
                     ret = k
-            logger.debug(f"min_K_J: no k > min({a},{b}), returning {ret}")
             return ret
         
         def max_K_J(a: int | Infinity, b: int | Infinity, Ks: frozenset[int]) -> int | Infinity:
             """Function to return the smallest element in K that is greater than max(a,b)"""
-            logger.debug(f"max_K_J: a={a}, b={b}, K={Ks}")
             # If either bound is +inf, return +inf
             if isinstance(a, Infinity) and a.positive:
-                logger.debug(f"max_K_J: a is +inf, returning POS_INF")
                 return POS_INF
             if isinstance(b, Infinity) and b.positive:
-                logger.debug(f"max_K_J: b is +inf, returning POS_INF")
                 return POS_INF
             # assume that K is a sorted set
             if not Ks:
-                logger.debug(f"max_K_J: K is empty, returning POS_INF")
                 return POS_INF  # If K is empty, widen to +inf
             for k in Ks:
                 if k >= max(a, b):
-                    logger.debug(f"max_K_J: found k={k} >= max({a},{b}), returning {k}")
                     return k
             result = next(iter(reversed(sorted(Ks))))
-            logger.debug(f"max_K_J: no k >= max({a},{b}), returning {result}")
             return result
 
         if self.is_empty:
-            logger.debug(f"Widening: self is empty, returning other={other}")
             return other
         if other.is_empty:
-            logger.debug(f"Widening: other is empty, returning self={self}")
             return self
         lower = min_K_J(self.lower, other.lower, self.K)
         upper = max_K_J(self.upper, other.upper, self.K)
         result = Interval(lower, upper)
         result.K = self.K  # Preserve K
-        logger.debug(f"Widening result: {result}")
         return result
 
 class Arithmetic:

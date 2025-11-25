@@ -243,15 +243,18 @@ class StateSet:
     def __str__(self):
         return "{" + ", ".join(f"{pc}: {state}" for pc, state in self.per_inst.items()) + "}"
 
-# abstract stepping function
 def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
+    """Execute one step of abstract interpretation for the given state.
+    
+    Yields either:
+    - AState: successor states to explore
+    - str: terminal outcomes ('ok', 'divide by zero', 'assertion error', etc.)
+    """
     pc = state.pc
     opr = bc[pc]
-    # logger.debug("")
-    # logger.debug(f"* STEP {pc}:")
-    # logger.debug(f"* - operation: {opr}")
     
     match opr:
+        # === Field Access ===
         case jvm.Get(field=f, static=s):
             # We assume that the field only has one '.'
             s = str(f).split('.')
@@ -268,17 +271,22 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
                 yield new_state
             else:
                 raise NotImplementedError(f"For jvm.Get in the stepping function. Do not know how to handle: {f}")
+        
+        # === Control Flow ===
         case jvm.Goto(target=t):
             # An unconditional jump to offset = target
             # Create new state with updated PC
             new_pc = PC(pc.method, t)
             new_state = AState(frames=state.frames, pc=new_pc)
             yield new_state
+        
         case jvm.New(classname=c):
             if c._as_string == "java/lang/AssertionError":
                 yield "assertion error"
             else:
                 raise NotImplementedError(f"jvm.New case not handled yet!")
+        
+        # === Conditional Branches ===
         case jvm.Ifz(condition=c, target=t):
             # Conditional branch - use interval analysis for feasibility
             frame = state.frames.peek()
@@ -390,6 +398,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
                 fall_pc = pc + 1
                 fall_state = AState(frames=new_frames, pc=fall_pc)
                 yield fall_state
+        
+        # === Array Operations (not implemented) ===
         case jvm.ArrayLength():
             # Note: ArrayLength appears twice in original code - this is the first occurrence
             # For abstract interpretation without heap, we'll skip this for now
@@ -402,6 +412,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
                 yield new_state
             else:
                 raise NotImplementedError(f"For jvm.New in the stepping function. Do not know how to handle: {c}")
+        
+        # === Stack Manipulation ===
         case jvm.Dup(words=words):
             frame = state.frames.peek()
             if not frame.stack.items:
@@ -428,6 +440,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             new_pc = pc + 1
             new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
+        
+        # === Local Variable Store ===
         case jvm.Store(type=jvm.Int(), index=idx):
             frame = state.frames.peek()
             if not frame.stack.items:
@@ -460,6 +474,7 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             new_pc = pc + 1
             new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
+        
         case jvm.ArrayStore(type=jvm.Int()):
             # ArrayStore requires heap abstraction
             raise NotImplementedError("ArrayStore requires heap abstraction")
@@ -469,6 +484,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
         case jvm.ArrayLoad(type=t):
             # ArrayLoad requires heap abstraction
             raise NotImplementedError("ArrayLoad requires heap abstraction")
+        
+        # === Local Variable Load ===
         case jvm.Load(type=(jvm.Int() | jvm.Reference()), index=i):
             frame = state.frames.peek()
             if i not in frame.locals:
@@ -480,6 +497,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             new_pc = pc + 1
             new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
+        
+        # === Arithmetic Operations ===
         case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Div):
             frame = state.frames.peek()
             if len(frame.stack.items) < 2:
@@ -583,6 +602,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             new_pc = pc + 1
             new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
+        
+        # === Type Conversion ===
         case jvm.Cast(from_=f, to_=t):
             frame = state.frames.peek()
             if not frame.stack.items:
@@ -598,6 +619,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             new_pc = pc + 1
             new_state = AState(frames=state.frames, pc=new_pc)
             yield new_state
+        
+        # === Local Variable Increment ===
         case jvm.Incr(index=idx, amount=n):
             frame = state.frames.peek()
             if idx not in frame.locals:
@@ -612,6 +635,8 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             new_pc = pc + 1
             new_state = AState(frames=new_frames, pc=new_pc)
             yield new_state
+        
+        # === Method Return ===
         case jvm.Return(type=(jvm.Int() | jvm.Reference())):
             frame = state.frames.peek()
             if not frame.stack.items:
@@ -642,9 +667,12 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
                 # PC should already be set correctly
                 new_state = AState(frames=new_frames, pc=state.pc)
                 yield new_state
+        
         case jvm.NewArray(type=jvm.Int(), dim=dim):
             # NewArray requires heap abstraction
             raise NotImplementedError("NewArray requires heap abstraction")
+        
+        # === Method Invocation ===
         case jvm.InvokeSpecial(_, method_name, _):
             string_method = str(method_name)[:24]
             assert string_method == "java/lang/AssertionError", f"Only assertion errors are handled so far, not {string_method}"
@@ -678,11 +706,25 @@ def step(state: AState, bc: Bytecode) -> Iterable[AState | str]:
             logger.warning(f"Unhandled opcode: {opr!r}")
             yield f"ERROR: Unhandled opcode {opr!r}"
 
-def manystep(sts : StateSet, bc: Bytecode) -> Iterable[AState | str]:
+def manystep(sts: StateSet, bc: Bytecode) -> Iterable[AState | str]:
+    """Execute one step for all states in the worklist."""
     for pc, state in sts.per_instruction():
         yield from step(state, bc)
 
-def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):    
+def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
+    """Perform abstract interpretation on a method.
+    
+    Args:
+        suite: The jpamb Suite containing the bytecode
+        methodid: The method to analyze
+        input_types: List of JVM types for method parameters
+        K: Set of program constants for interval widening
+    
+    Returns:
+        tuple: (final_states, input_intervals)
+            - final_states: Set of possible outcomes ('ok', 'divide by zero', '*', etc.)
+            - input_intervals: List of intervals for each input parameter
+    """
     # Create initial input intervals before any analysis
     # These represent the narrowest intervals that cover all constants K
     initial_input_intervals = []
@@ -705,21 +747,21 @@ def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
     # load bytecode with constants K
     bc = Bytecode(suite, dict(), K if K else set())
 
-    # perform abstract interpretation
+    # Perform fixed-point iteration
     MAX_STEPS = 100
     final = set()
-    sts = AState.initialstate_from_method(methodid, input_types, K) # TODO: better naming - ´sts´ refer to set of states
+    state_set = AState.initialstate_from_method(methodid, input_types, K)
 
     for i in range(MAX_STEPS):
-        if not sts.needswork:
+        if not state_set.needswork:
             logger.debug(f"Fixed point reached after {i} iterations")
             break
         
-        for s in manystep(sts, bc):
+        for s in manystep(state_set, bc):
             if isinstance(s, str):
                 final.add(s)
             else:
-                sts |= s
+                state_set |= s
     else:
         logger.warning(f"Reached MAX_STEPS ({MAX_STEPS}) without convergence")
         # If we hit max steps without converging, there's likely an infinite loop
@@ -727,20 +769,20 @@ def abstract_interpretation(suite: jpamb.Suite, methodid, input_types, K):
 
     # If we reached a fixed point but have no final outcomes, check for infinite loops
     # An infinite loop occurs when there are explored states but no terminal outcomes
-    if not final and len(sts.per_inst) > 0:
+    if not final and len(state_set.per_inst) > 0:
         logger.debug("No terminal outcomes found but states were explored - infinite loop detected")
         final.add("*")
 
     logger.debug(f"The following final states {final} are possible")
-    logger.debug(f"Total states explored: {len(sts.per_inst)}")
+    logger.debug(f"Total states explored: {len(state_set.per_inst)}")
 
     print_more = False
     if print_more:
-        ## Output final intervals at each program point
+        # Output final intervals at each program point
         logger.debug("")
         logger.debug("Final abstract values at each program point:")
-        for pc in sorted(sts.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
-            state = sts.per_inst[pc]
+        for pc in sorted(state_set.per_inst.keys(), key=lambda p: (str(p.method), p.offset)):
+            state = state_set.per_inst[pc]
             if state.frames.items:
                 frame = state.frames.items[-1]
                 locals_str = ", ".join(f"v{k}={v.interval}" for k, v in sorted(frame.locals.items()) if isinstance(v, AbstractValue))
