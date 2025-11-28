@@ -826,6 +826,18 @@
                       }
                     }
                   }
+                },
+                {
+                  "type": "annotation",
+                  "value": {
+                    "type": "jpamb/utils/Case",
+                    "values": {
+                      "value": {
+                        "type": "string",
+                        "value": "(1024) -> assertion error"
+                      }
+                    }
+                  }
                 }
               ]
             }
@@ -980,23 +992,23 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 51,
+            "line": 52,
             "offset": 0
           },
           {
-            "line": 52,
+            "line": 53,
             "offset": 5
           },
           {
-            "line": 51,
+            "line": 52,
             "offset": 9
           },
           {
-            "line": 54,
+            "line": 55,
             "offset": 11
           },
           {
-            "line": 55,
+            "line": 56,
             "offset": 20
           }
         ],

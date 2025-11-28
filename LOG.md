@@ -9,3 +9,6 @@ Right now we find static literals add + and - 1 to them. What if it is the bigge
 
 # A problem with running forever ("*")
 I have added in the intepreter that it runs in `range(1000000)` (one more zero than before). because of big numbers in `jpamb.cases.Calls.allPrimesArePositive` and when you allow the fuzzer to run longer. We need to figure something out here?
+
+# He forgot assertion errors in `jpamb.cases.Dependent.divisionLoop`
+I have added a case for `1024` that triggers an assertion error when dividing by 2 five times.
