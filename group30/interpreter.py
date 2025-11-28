@@ -106,7 +106,7 @@ def step(state: State) -> State | str:
     assert isinstance(state, State), f"expected frame but got {state}"
     frame = state.frames.peek()
     opr = bc[frame.pc]
-    logger.debug(f"STEP {opr}\n{state}")
+    # logger.debug(f"STEP {opr}\n{state}")
     match opr:
         case jvm.Get(field=f, static=s):
             # We assume that the field only has one '.'
@@ -392,12 +392,24 @@ def step(state: State) -> State | str:
             state.frames.push(new_frame)
             # Do not increment program counter (first increment after the callee method returns)
             return state
+        case jvm.Negate(type=jvm.Int()):
+            v = frame.stack.pop()
+            assert v.type is jvm.Int(), f"expected int, but got {v}"
+            frame.stack.push(jvm.Value.int(-v.value))
+            frame.pc += 1
+            return state
         case a:
             a.help()
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
 
+cache = dict()
+
 def run(methodid: jvm.AbsMethodID, input: Input, stop_event) -> str:
+
+    if input in cache:
+        return cache[input]
+
     frame = Frame.from_method(methodid)
     state = State({}, Stack.empty())
 
@@ -418,14 +430,15 @@ def run(methodid: jvm.AbsMethodID, input: Input, stop_event) -> str:
 
     state.frames.push(frame)
 
-    for x in range(100000):
+    for x in range(1000000):
         if stop_event.is_set():
             return "not done"
-        
 
         state = step(state)
         if isinstance(state, str):
+            cache[input] = state
             return state
         
     # did not terminate within 100000 steps (chance of infinite run?)
+    cache[input] = "*"
     return "*"
