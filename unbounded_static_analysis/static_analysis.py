@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""Static analysis entry point for jpamb test framework.
-
-This script extracts program constants and input parameters from Java source code,
-then performs abstract interpretation using interval analysis to determine possible
-outcomes for a given method.
-"""
 import logging
 import sys
 from pathlib import Path
@@ -21,41 +15,17 @@ from abstract_interpreter import abstract_interpretation
 
 # === Type Conversion ===
 def string_to_jvm_type(type_str: str) -> jvm.Type:
-    """Convert Java type string to JVM type.
-    
-    Args:
-        type_str: Java type name (e.g., 'int', 'boolean', 'String[]')
-    
-    Returns:
-        Corresponding jvm.Type instance
-    """
     if type_str == 'int':
         return jvm.Int()
     elif type_str == 'boolean':
-        return jvm.Int()  # Boolean is represented as int in JVM bytecode
+        return jvm.Int()  # Boolean as int
     elif type_str.endswith('[]'):
-        return jvm.Reference()  # Array types
+        return jvm.Reference()  # Array types (not handled by this analysis)
     else:
-        return jvm.Reference()  # Object types
+        return jvm.Reference()  # Object types (not handled by this analysis)
 
 
 def analyze_method(method_signature: str):
-    """Analyze a Java method and return possible outcomes and input intervals.
-    
-    Args:
-        method_signature: Method signature in the format "package.Class.method:(params)returnType"
-                         e.g., "jpamb.cases.Simple.divideByN:(I)I"
-    
-    Returns:
-        tuple: (final_states, input_intervals)
-            - final_states: Set of possible outcomes ('ok', 'divide by zero', '*', etc.)
-            - input_intervals: List of Interval objects for each input parameter
-    
-    Example:
-        >>> final_states, input_intervals = analyze_method("jpamb.cases.Simple.divideByN:(I)I")
-        >>> print(final_states)
-        {'ok', 'divide by zero'}
-    """
     # Parse method identifier
     methodid = jvm.AbsMethodID.decode(method_signature)
     
@@ -84,7 +54,7 @@ methodid = jpamb.getmethodid(
 
 logging.basicConfig(level=logging.DEBUG)
 
-# === Extract Constants and Parameters ===
+# Extract constants and parameters
 srcfile = jpamb.sourcefile(methodid).relative_to(Path.cwd())
 
 K, input_params = syntaxer.get_constants(srcfile, methodid)
@@ -93,7 +63,7 @@ logging.debug("Extracted input parameters: %s", input_params)
 
 input_param_types = [string_to_jvm_type(param['type']) for param in input_params]
 
-# === Run Abstract Interpretation ===
+# Run abstract interpretation
 suite = jpamb.Suite()
 logging.debug(f"Input parameter types (JVM): {input_param_types}")
 
