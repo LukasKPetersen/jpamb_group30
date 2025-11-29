@@ -207,7 +207,7 @@ class Interval:
             # assume that K is a sorted set
             if not Ks:
                 return NEG_INF  # If K is empty, widen to -inf
-            ret = next(iter(Ks))
+            ret = NEG_INF # prev value: next(iter(Ks))
             for k in Ks:
                 if k > min(a, b):
                     return ret
@@ -228,8 +228,8 @@ class Interval:
             for k in Ks:
                 if k >= max(a, b):
                     return k
-            result = next(iter(reversed(sorted(Ks))))
-            return result
+            # result = next(iter(reversed(sorted(Ks))))
+            return POS_INF
 
         if self.is_empty:
             return other

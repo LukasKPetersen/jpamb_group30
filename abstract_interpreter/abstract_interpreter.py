@@ -105,7 +105,6 @@ class AbstractValue:
             return cls(type=value.type, interval=Interval.empty())
     
     
-    
     @classmethod
     def int_interval(cls, interval: Interval) -> "AbstractValue":
         """Create an abstract int value from an interval"""
