@@ -52,6 +52,7 @@ class Edge:
         self.branch_opcode = branch_opcode
         self.eval = eval
         self.id = (self.start_node.offset_end, self.end_node.offset_start)
+        self.is_fallthrough_edge = False
 
     def __repr__(self):
         return f"Edge({self.start_node} -> {self.end_node})"
@@ -96,7 +97,14 @@ class CFG:
             from_offset, from_method = from_tup
             to_offset, to_method = to_tup
 
-            assert n.offset_end == from_offset, f"Logic fails in 'convert_to_set_of_edges()'. Offsets do not match: {n.offset_end} != {from_offset}"
+            # Go on to the next node that does not have a fallthrough child edge in the CFG
+            while n.child_edges[0].is_fallthrough_edge:
+                n = n.child_edges[0].end_node
+
+            if not n.child_edges[0].is_fallthrough_edge:
+                assert n.offset_end == from_offset, f"Logic fails in 'convert_to_set_of_edges()'. Offsets do not match: {n.offset_end} != {from_offset}"
+
+
             for e in n.child_edges:
                 if (e.end_node.offset_start == to_offset and 
                     CFG.registry[from_method].cfg_id == n.cfg_id and
@@ -169,7 +177,7 @@ class CFG:
             
         else:
             # Unconditional Jump / Loop
-            if pc.offset > target:
+            if pc.offset >= target:
                 # Backward Jump Handling
                 pc.set(target)
                 target_node = None
@@ -200,6 +208,7 @@ class CFG:
 
                             # 5. Link upper to lower
                             fallthrough_edge = Edge(n, lower_half, None, None)
+                            fallthrough_edge.is_fallthrough_edge = True
                             n.child_edges.append(fallthrough_edge) # Attach directly to n
                             
                             target_node = lower_half
@@ -430,6 +439,7 @@ class CFG:
                 # 5. Connect current -> next
                 # As requested: Edge with bytecode=None, eval=None (pure fall-through)
                 fallthrough_edge = Edge(current_node, next_node, None, None)
+                fallthrough_edge.is_fallthrough_edge = True
                 current_node.attach_edges([fallthrough_edge])
 
     def _print_graph(self, node=None, visited=None):
@@ -514,7 +524,12 @@ def visualize_cfg_pyvis(cfg):
                 net.add_node(id(edge.end_node),
                          label=f"{edge.end_node}\n{{{edge.end_node.offsets()}}}")
                 
-            if edge.eval == None and edge.branch_opcode == None:
+            if edge.is_fallthrough_edge:
+                net.add_edge(id(node), id(edge.end_node),
+                         label="fallthrough edge",
+                         font={"size": 20, "align": "top"},
+                         arrows="to")
+            elif edge.eval == None and edge.branch_opcode == None:
                 net.add_edge(id(node), id(edge.end_node),
                          label="", #TODO: should there be text here?
                          font={"size": 20, "align": "top"},
@@ -537,4 +552,4 @@ def visualize_cfg_pyvis(cfg):
     net.write_html("cfg.html", open_browser=True)
     print("Wrote cfg.html")
 
-visualize_cfg_pyvis(cfg)
+# visualize_cfg_pyvis(cfg)

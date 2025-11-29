@@ -364,6 +364,12 @@ def step(state: State, traversed_edges=None) -> State | str:
             frame.stack.push(v)
             frame.pc += 1
             return state
+        case jvm.Negate(type=jvm.Int()):
+            v = frame.stack.pop()
+            assert v.type is jvm.Int(), f"expected int, but got {v}"
+            frame.stack.push(jvm.Value.int(-v.value))
+            frame.pc += 1
+            return state
         case jvm.Incr(index=idx, amount=n):
             v = frame.locals[idx]
             assert v.type is jvm.Int(), f"expected int, but got {v}"
