@@ -112,4 +112,13 @@ public class Simple {
     return 1 / (n - 10054203);
   }
 
+  @Case("(100) -> ok")
+  public static int onlyOneExecutionPath(int n) {
+    n = -1;
+    if (n > 0) {
+      assert n < 0;
+    }
+    return n;
+  }
+
 }
