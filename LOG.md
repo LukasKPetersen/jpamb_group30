@@ -16,3 +16,10 @@ I have added a case for `1024` that triggers an assertion error when dividing by
 # Merging of CFG
 # - Check in `interpreter.py` `run()` that it is correct
 # - `CFG.py` has prints in them
+
+
+# No arg asumsion
+dosn't work if random
+
+NOTE: this is with the assumption that every method are deterministic.
+If any method is non-deterministic, we need to re-run with the same input multiple times.

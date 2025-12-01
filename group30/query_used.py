@@ -137,8 +137,8 @@ def generate_every_input_combination(literal_dict: dict[jvm.Type, List[Any]], pa
         return []  # No parameters, return empty combination
     
     lit_combi: List[List[jvm.Value]] = []
-    for type in param_types:
-        match type:
+    for parameter_type in param_types:
+        match parameter_type:
             case jvm.Int():
                 ret = []
                 for val in literal_dict.get(jvm.Int(), []):
@@ -156,7 +156,7 @@ def generate_every_input_combination(literal_dict: dict[jvm.Type, List[Any]], pa
                 lit_combi.append(ret)
             case jvm.Array(jvm.Char()):
                 ret = []
-                char_literals = literal_dict.get(jvm.Char(), [])
+                char_literals = literal_dict.get(jvm.Array(jvm.Char()), [])
 
                 for array_size in range(1, len(char_literals) + 1):
                     for v in itertools.product(char_literals, repeat=array_size):

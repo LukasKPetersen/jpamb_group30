@@ -2,7 +2,7 @@ import random
 import threading
 from typing import List
 
-from fuzzer_syntactic_analysis.query import get_static_variables_combinations
+from query_used import get_static_variables_combinations
 import interpreter
 from fuzzer import Fuzzer, Strategy
 from jpamb import jvm
