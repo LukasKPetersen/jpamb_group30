@@ -23,6 +23,7 @@ dependencies = [
   "tree-sitter-java >= 0.23, <= 0.26",
   "tree-sitter >= 0.23, < 0.26",
   "z3-solver==4.15.*",
+  "pyvis>=0.3.2",
 ]
 authors = [
   { name = "Christian Gram Kalhauge", email = "chrg@dtu.dk" }

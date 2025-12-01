@@ -288,6 +288,54 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
 
 @cli.command()
 @click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
+)
+@click.option(
+    "--filter",
+    "-f",
+    help="A regular expression which filter the methods to run on.",
+    callback=re_parser,
+)
+@click.option(
+    "--with-python/--no-with-python",
+    "-W/-noW",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.argument("PROGRAM", nargs=-1)
+@click.pass_obj
+def cfg(suite, program, filter, with_python, timeout):
+    """Run PROGRAM as a CFG generator on each matched method."""
+
+    methodid_set = set()
+    r = Reporter(sys.stdout)
+    program = resolve_cmd(program, with_python)
+
+    for case in suite.cases:
+        if filter and not filter.search(str(case)):
+            continue
+
+        if case.methodid in methodid_set:
+            continue
+        methodid_set.add(case.methodid)
+
+        with r.context(f"CFG for {case.methodid}"):
+            try:
+                # r.run already prints stdout/stderr
+                r.run(
+                    program + (case.methodid.encode(),),
+                    timeout=timeout,
+                )
+            except subprocess.TimeoutExpired:
+                r.output("<timeout>")
+            except subprocess.CalledProcessError as e:
+                r.output(f"<error: {e}>")
+
+@cli.command()
+@click.option(
     "--with-python/--no-with-python",
     "-W/-noW",
     help="the analysis is a python script, which should run in the same interpreter as jpamb.",
@@ -753,6 +801,33 @@ def inspect(suite, method, format):
             case "json":
                 res = json.dumps(res)
         print(f"{i:03d} | {res}")
+
+
+@cli.command()
+@click.option(
+    "--format",
+    type=click.Choice(["pretty", "real", "repr", "json"], case_sensitive=True),
+    default="pretty",
+    help="The format to print the instruction in.",
+)
+@click.argument("METHOD")
+@click.pass_obj
+def inspect_return_str(suite, method, format):
+    method = jvm.AbsMethodID.decode(method)
+    s = ""
+    for i, res in enumerate(suite.findmethod(method)["code"]["bytecode"]):
+        op = jvm.Opcode.from_json(res)
+        match format:
+            case "pretty":
+                res = str(op)
+            case "real":
+                res = op.real()
+            case "repr":
+                res = repr(op)
+            case "json":
+                res = json.dumps(res)
+        s += f"{i:03d} | {res}\n"
+    return s[:-2] 
 
 
 @cli.command()
