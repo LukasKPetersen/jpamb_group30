@@ -131,8 +131,7 @@ def step(state: State) -> State | str:
             else:
                 return "ok"
         case a:
-            a.help()
-            sys.exit(-1)
+            raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
 
 frame = Frame.from_method(methodid)
