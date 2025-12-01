@@ -1,0 +1,312 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body style='background-color: #222222;'>
+
+    <div id="bytecodePanel" style="
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        z-index: 9998;
+        background-color: rgba(30, 30, 30, 0.95);
+        border: 1px solid #555;
+        border-radius: 8px;
+        padding: 12px;
+        width: 507px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        color: #eee;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    ">
+
+        <!-- Hide button -->
+        <button onclick="document.getElementById('bytecodePanel').style.display='none';
+                        document.getElementById('bytecodeToggleButton').style.display='block';"
+            style="
+                position: absolute;
+                top: 4px;
+                right: 6px;
+                background: none;
+                border: none;
+                color: #bbb;
+                cursor: pointer;
+                font-size: 18px;
+            ">&times;</button>
+
+        <h3 style="margin: 0 0 10px 0; color: #ddd; font-family: Arial, sans-serif;">
+            Bytecode
+        </h3>
+
+        <pre style="white-space: pre;">000 | get static jpamb/cases/Simple.$assertionsDisabled:Z
+001 | ifz ne 8
+002 | load:I 0
+003 | ifz ne 8
+004 | new java/lang/AssertionError
+005 | dup 1
+006 | invoke special java/lang/AssertionError.<init>:()V
+007 | throw
+008 | return:</pre>
+
+    </div>
+    
+
+    <button id="bytecodeToggleButton"
+        onclick="document.getElementById('bytecodePanel').style.display='block';
+                this.style.display='none';"
+        style="
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 9999;
+            background-color: #3A7AFE;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    ">
+        Show Bytecode
+    </button>
+    
+
+    <div id="cfgLegend" style="
+        position: fixed; 
+        top: 10px; 
+        left: 10px; 
+        z-index: 9999; 
+        background-color: rgba(50, 50, 50, 0.9); 
+        border: 1px solid #777; 
+        border-radius: 8px; 
+        padding: 15px; 
+        color: white; 
+        font-family: Arial, sans-serif; 
+        font-size: 14px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        max-width: 300px; /* Limits the width to force wrapping */
+    ">
+        <!-- Close Button: Hides legend and shows the toggle button -->
+        <button onclick="document.getElementById('cfgLegend').style.display = 'none'; document.getElementById('legendToggleButton').style.display = 'block';" style="
+            position: absolute; 
+            top: 5px; 
+            right: 5px; 
+            background: none; 
+            border: none; 
+            color: #ccc; 
+            cursor: pointer; 
+            font-size: 20px;
+            padding: 5px;
+        ">&times;</button>
+
+        <h3 style="margin-top: 0; border-bottom: 1px solid #777; padding-bottom: 5px;">CFG info</h3>
+        
+        <!-- Initial Node -->
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <div style="width: 20px; height: 20px; background-color: lightgreen; border-radius: 3px; margin-right: 10px; border: 1px solid white;"></div>
+            <span><strong>Initial Node</strong></span>
+        </div>
+
+        <!-- Node ID Section -->
+        <div style="margin-bottom: 10px;">
+            <span style="color: #aaa; font-size: 13px; font-weight: 500;">Each node has an ID label starting with a B</span><br>
+            <strong>Node ID:</strong> <span style="color: #ccc;">Node number @ CFG number</span>
+        </div>
+
+        <!-- Offsets Section -->
+        <div style="margin-bottom: 10px;">
+            <span style="color: #aaa; font-size: 13px; font-weight: 500;">Its bytecode coverage is explicitly stated</span><br>
+            <strong>Offsets:</strong> <span style="color: #ccc;">{ Start offset - End offset }</span>
+        </div>
+        
+        <!-- Assertion Info Section (Line breaks removed, wraps naturally) -->
+        <hr style="border-color: #555; margin: 10px 0;">
+        <div style="font-style: italic; margin-top: 10px; font-size: 13px;">
+            <span style="color: #ccc;">The bytecode instructions related to assertion enablement are not represented here as edges. All CFGs are built on the assumption that assertions are enabled.</span>
+        </div>
+    </div>
+    
+
+    <button id="legendToggleButton" onclick="document.getElementById('cfgLegend').style.display = 'block'; this.style.display = 'none';" style="
+        position: fixed; 
+        top: 10px; 
+        left: 10px; 
+        z-index: 10000; 
+        background-color: #4CAF50; /* Distinct color */
+        color: white; 
+        border: none; 
+        padding: 8px 15px; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        display: none; /* Initially hidden */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    ">
+        Show Legend
+    </button>
+    
+<h1 style='text-align:center; color: white; font-family: Arial, sans-serif;'>CFG for jpamb.cases.Simple.assertBoolean:(Z)V</h1>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "lightgreen", "font": {"color": "white"}, "id": 4405177584, "label": "B0@0\n{0 - 3}", "shape": "dot", "size": 25}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 4405239696, "label": "B1@0\n{4 - 7}\nthrow", "shape": "dot"}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 4405240016, "label": "B2@0\n{8 - 8}\nreturn:V", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "font": {"align": "top", "color": "white", "face": "arial", "size": 20, "strokeWidth": 0.6}, "from": 4405177584, "label": "ifz ne 8 : False", "to": 4405239696}, {"arrows": "to", "font": {"align": "top", "color": "white", "face": "arial", "size": 20, "strokeWidth": 0.6}, "from": 4405177584, "label": "ifz ne 8 : True", "to": 4405240016}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.3,
+            "damping": 0.09,
+            "gravitationalConstant": -80000,
+            "springConstant": 0.05,
+            "springLength": 200
+        },
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

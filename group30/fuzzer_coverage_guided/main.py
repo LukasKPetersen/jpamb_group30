@@ -11,6 +11,17 @@ from jpamb.model import Input
 from CFG import CFG, Node, Edge
 import queue
 
+# # TODO: remove
+# def print_traversed_edges(traversed_edges: list[tuple[(int, jvm.AbsMethodID),(int,jvm.AbsMethodID)]]):
+#     methods = {}
+#     for edge in traversed_edges:
+#         edge_start, edge_end = edge
+#         logger.debug(f"Offset: {edge_start[0]} - {edge_end[0]} ", end='')
+#         if edge_start != edge_end:
+#             logger.debug(f"and jumping from method {edge_start[1]} to {edge_end[1]}")
+#         else:
+#             logger.debug("")
+
 class CoverageGuidedStrategy(Strategy):
     """ Random input generation strategy. """
     def __init__(self, method_signature: jvm.AbsMethodID, argument: None|Input):

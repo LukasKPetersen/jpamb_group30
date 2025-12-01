@@ -804,6 +804,33 @@ def inspect(suite, method, format):
 
 
 @cli.command()
+@click.option(
+    "--format",
+    type=click.Choice(["pretty", "real", "repr", "json"], case_sensitive=True),
+    default="pretty",
+    help="The format to print the instruction in.",
+)
+@click.argument("METHOD")
+@click.pass_obj
+def inspect_return_str(suite, method, format):
+    method = jvm.AbsMethodID.decode(method)
+    s = ""
+    for i, res in enumerate(suite.findmethod(method)["code"]["bytecode"]):
+        op = jvm.Opcode.from_json(res)
+        match format:
+            case "pretty":
+                res = str(op)
+            case "real":
+                res = op.real()
+            case "repr":
+                res = repr(op)
+            case "json":
+                res = json.dumps(res)
+        s += f"{i:03d} | {res}\n"
+    return s[:-2] 
+
+
+@cli.command()
 @click.pass_context
 @click.option(
     "--directory",

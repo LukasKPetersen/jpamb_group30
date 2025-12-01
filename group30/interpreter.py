@@ -20,7 +20,7 @@ class PC:
     def __isub__(self, delta):
         self.offset -= delta
         return self
-
+    
     def __iadd__(self, delta):
         self.offset += delta
         return self

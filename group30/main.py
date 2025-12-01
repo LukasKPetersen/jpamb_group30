@@ -3,7 +3,7 @@ import sys
 # from fuzzer_random.main import RandomFuzzer
 # from fuzzer_syntactic_analysis.main import SyntacticAnalysisFuzzer
 # from fuzzer_central_expansion.main import CentralExpansionFuzzer
-# from fuzzer_central_expansion_and_syntactic_analysis.main import CentralExpansionAndSyntaticAnalysisFuzzer
+#from fuzzer_central_expansion_and_syntactic_analysis.main import CentralExpansionAndSyntaticAnalysisFuzzer
 from fuzzer_coverage_guided.main import CoverageGuidedStrategy
 import jpamb
 
@@ -36,7 +36,7 @@ else:
 # fuzzer = RandomFuzzer(method_signature, argument)
 # fuzzer = SyntacticAnalysisFuzzer(method_signature, argument)
 # fuzzer = CentralExpansionFuzzer(method_signature, argument)
-# fuzzer = CentralExpansionAndSyntaticAnalysisFuzzer(method_signature, argument)
+#fuzzer = CentralExpansionAndSyntaticAnalysisFuzzer(method_signature, argument)
 fuzzer = CoverageGuidedStrategy(method_signature, argument)
 
 fuzzer.run()
