@@ -12,3 +12,7 @@ I have added in the intepreter that it runs in `range(1000000)` (one more zero t
 
 # He forgot assertion errors in `jpamb.cases.Dependent.divisionLoop`
 I have added a case for `1024` that triggers an assertion error when dividing by 2 five times.
+
+# Merging of CFG
+# - Check in `interpreter.py` `run()` that it is correct
+# - `CFG.py` has prints in them

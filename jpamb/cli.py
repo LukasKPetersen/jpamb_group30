@@ -288,6 +288,54 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
 
 @cli.command()
 @click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
+)
+@click.option(
+    "--filter",
+    "-f",
+    help="A regular expression which filter the methods to run on.",
+    callback=re_parser,
+)
+@click.option(
+    "--with-python/--no-with-python",
+    "-W/-noW",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.argument("PROGRAM", nargs=-1)
+@click.pass_obj
+def cfg(suite, program, filter, with_python, timeout):
+    """Run PROGRAM as a CFG generator on each matched method."""
+
+    methodid_set = set()
+    r = Reporter(sys.stdout)
+    program = resolve_cmd(program, with_python)
+
+    for case in suite.cases:
+        if filter and not filter.search(str(case)):
+            continue
+
+        if case.methodid in methodid_set:
+            continue
+        methodid_set.add(case.methodid)
+
+        with r.context(f"CFG for {case.methodid}"):
+            try:
+                # r.run already prints stdout/stderr
+                r.run(
+                    program + (case.methodid.encode(),),
+                    timeout=timeout,
+                )
+            except subprocess.TimeoutExpired:
+                r.output("<timeout>")
+            except subprocess.CalledProcessError as e:
+                r.output(f"<error: {e}>")
+
+@cli.command()
+@click.option(
     "--with-python/--no-with-python",
     "-W/-noW",
     help="the analysis is a python script, which should run in the same interpreter as jpamb.",
