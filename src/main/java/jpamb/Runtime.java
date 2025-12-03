@@ -22,6 +22,7 @@ public class Runtime {
       Tricky.class,
       jpamb.cases.Arrays.class,
       Dependent.class,
+      HardFuzzer.class,
       Calls.class);
 
   public static Case[] cases(Method m) {

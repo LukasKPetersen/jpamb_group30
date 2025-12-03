@@ -60,7 +60,7 @@ class RandomStrategy(Strategy):
         t = threading.Thread(target=fuzz_loop, args=(stop_event,))
         t.daemon = True
         t.start()
-        t.join(timeout=1)
+        t.join(timeout=10)
 
         if t.is_alive():
             stop_event.set()

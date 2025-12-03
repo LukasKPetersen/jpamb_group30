@@ -37,6 +37,20 @@ jpamb.cases.Dependent.divisionLoop:(I)V                      (1024) -> assertion
 jpamb.cases.Dependent.normalizedDistance:(II)I               (0, 0) -> ok
 jpamb.cases.Dependent.safeDivByN:(I)I                        (0) -> ok
 jpamb.cases.Dependent.safeDivByN:(I)I                        (1) -> ok
+jpamb.cases.HardFuzzer.arrayOrder:([I)V                      ([I:1, 2, 3, 4, 5]) -> ok
+jpamb.cases.HardFuzzer.arrayOrder:([I)V                      ([I:5, 4, 3, 2, 1]) -> assertion error
+jpamb.cases.HardFuzzer.arrayOrder:([I)V                      ([I:]) -> out of bounds
+jpamb.cases.HardFuzzer.bigEvaluatedNumber:(I)V               (0) -> ok
+jpamb.cases.HardFuzzer.bigEvaluatedNumber:(I)V               (16777216) -> assertion error
+jpamb.cases.HardFuzzer.hexMagicNumber:(I)I                   (-559038737) -> divide by zero
+jpamb.cases.HardFuzzer.hexMagicNumber:(I)I                   (0) -> ok
+jpamb.cases.HardFuzzer.maxIntValue:(I)V                      (0) -> ok
+jpamb.cases.HardFuzzer.maxIntValue:(I)V                      (2147483647) -> assertion error
+jpamb.cases.HardFuzzer.signedOverflow:(I)V                   (-1) -> ok
+jpamb.cases.HardFuzzer.signedOverflow:(I)V                   (0) -> divide by zero
+jpamb.cases.HardFuzzer.signedOverflow:(I)V                   (1) -> ok
+jpamb.cases.HardFuzzer.specificCombination:(III)V            (0, 0, 0) -> ok
+jpamb.cases.HardFuzzer.specificCombination:(III)V            (12345, 67890, 11111) -> assertion error
 jpamb.cases.Loops.forever:()V                                () -> *
 jpamb.cases.Loops.neverAsserts:()V                           () -> *
 jpamb.cases.Loops.neverDivides:()I                           () -> *

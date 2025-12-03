@@ -33,6 +33,7 @@ class FullStrategy(Strategy):
                 outputs_encountered.add(interpreter.run(self.method_signature, method_input, stop_event))
                 return
             
+            # logger.debug(f"static_method_inputs: {static_method_inputs}")
             # fuzz static inputs first
             while not stop_event.is_set() and static_method_inputs:
                 method_input: Input = static_method_inputs.pop()
@@ -74,7 +75,7 @@ class FullStrategy(Strategy):
                             if isinstance(intervals.lower, Infinity) or isinstance(intervals.upper, Infinity):
                                 raise NotImplementedError(f"Cannot generate inputs for unbounded interval: {intervals}")
                             range_values = list(range(intervals.lower, intervals.upper + 1))
-                            logger.warning(f"Generated range for Int parameter: {range_values}")
+                            # logger.warning(f"Generated range for Int parameter: {range_values}")
                             input_dict[jvm.Int()] = range_values
                         case jvm.Boolean():
                             input_dict[jvm.Boolean()] = [True, False]

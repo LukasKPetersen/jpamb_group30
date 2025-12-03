@@ -1,0 +1,2444 @@
+{
+  "info": {
+    "name": "Fuzzer",
+    "version": "0.1",
+    "group": "Group 30",
+    "tags": [
+      "fuzzer",
+      "python"
+    ],
+    "system": null
+  },
+  "bymethod": {
+    "jpamb.cases.Arrays.arrayContent:()V": {
+      "score": 1.0,
+      "time": 96207588.0,
+      "relative": 1.4106446662390875,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 97036806,
+          "relative": 1.3845902332576618,
+          "calibrates": [
+            3985205,
+            4020070
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 96663597,
+          "relative": 1.4327179249761826,
+          "calibrates": [
+            3542998,
+            3594977
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 94922361,
+          "relative": 1.414625840483418,
+          "calibrates": [
+            3632107,
+            3675458
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arrayInBounds:()V": {
+      "score": 1.0,
+      "time": 98973770.0,
+      "relative": 1.4361915324108272,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 96181932,
+          "relative": 1.4301834444597186,
+          "calibrates": [
+            3556582,
+            3587395
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 94971259,
+          "relative": 1.4259559542412528,
+          "calibrates": [
+            3542217,
+            3580837
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 105768119,
+          "relative": 1.45243519853151,
+          "calibrates": [
+            3549485,
+            3914136
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arrayIsNull:()V": {
+      "score": 1.0,
+      "time": 97469863.33333333,
+      "relative": 1.416119835463638,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "null pointer": Infinity
+          },
+          "score": 1,
+          "time": 99763209,
+          "relative": 1.417171626931159,
+          "calibrates": [
+            4015479,
+            3619868
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "null pointer": Infinity
+          },
+          "score": 1,
+          "time": 95863178,
+          "relative": 1.4232839226796359,
+          "calibrates": [
+            3650917,
+            3583406
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "null pointer": Infinity
+          },
+          "score": 1,
+          "time": 96783203,
+          "relative": 1.4079039567801195,
+          "calibrates": [
+            3611136,
+            3955904
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arrayIsNullLength:()V": {
+      "score": 1.0,
+      "time": 95648059.33333333,
+      "relative": 1.422911423556253,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "null pointer": Infinity
+          },
+          "score": 1,
+          "time": 98003301,
+          "relative": 1.424992409845455,
+          "calibrates": [
+            3670079,
+            3696711
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "null pointer": Infinity
+          },
+          "score": 1,
+          "time": 95139848,
+          "relative": 1.4247388676445425,
+          "calibrates": [
+            3590712,
+            3565012
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "null pointer": Infinity
+          },
+          "score": 1,
+          "time": 93801029,
+          "relative": 1.4190029931787616,
+          "calibrates": [
+            3549301,
+            3599523
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arrayLength:()V": {
+      "score": 1.0,
+      "time": 96869562.33333333,
+      "relative": 1.4163076323293105,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 96131870,
+          "relative": 1.4297717203055766,
+          "calibrates": [
+            3557631,
+            3589400
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 97033967,
+          "relative": 1.4083371766585682,
+          "calibrates": [
+            3690480,
+            3888602
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 97442850,
+          "relative": 1.4108140000237868,
+          "calibrates": [
+            3661318,
+            3906418
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arrayNotEmpty:([I)V": {
+      "score": 2.0,
+      "time": 10117870913.0,
+      "relative": 3.4367522600243863,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10115801848,
+          "relative": 3.425539586380046,
+          "calibrates": [
+            3856296,
+            3738056
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10130754075,
+          "relative": 3.447164927934418,
+          "calibrates": [
+            3584605,
+            3651533
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10107056816,
+          "relative": 3.4375522657586957,
+          "calibrates": [
+            3723892,
+            3656891
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arrayOutOfBounds:()V": {
+      "score": 1.0,
+      "time": 97601507.33333333,
+      "relative": 1.4322526863782075,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "out of bounds": Infinity
+          },
+          "score": 1,
+          "time": 99800278,
+          "relative": 1.435592170359612,
+          "calibrates": [
+            3634164,
+            3686822
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "out of bounds": Infinity
+          },
+          "score": 1,
+          "time": 96242106,
+          "relative": 1.426081797662252,
+          "calibrates": [
+            3607283,
+            3608996
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "out of bounds": Infinity
+          },
+          "score": 1,
+          "time": 96762138,
+          "relative": 1.435084091112758,
+          "calibrates": [
+            3575488,
+            3530940
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arraySometimesNull:(I)V": {
+      "score": 2.0,
+      "time": 10111070769.666666,
+      "relative": 3.4416935159735353,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "out of bounds": Infinity,
+            "null pointer": Infinity
+          },
+          "score": 2,
+          "time": 10112511807,
+          "relative": 3.439353246546166,
+          "calibrates": [
+            3736900,
+            3617306
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "out of bounds": Infinity,
+            "null pointer": Infinity
+          },
+          "score": 2,
+          "time": 10112270343,
+          "relative": 3.450281684750562,
+          "calibrates": [
+            3587497,
+            3583788
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "null pointer": Infinity,
+            "out of bounds": Infinity
+          },
+          "score": 2,
+          "time": 10108430159,
+          "relative": 3.435445616623879,
+          "calibrates": [
+            3761727,
+            3655953
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arraySpellsHello:([C)V": {
+      "score": 3.0,
+      "time": 10126387335.0,
+      "relative": 3.388705212221461,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity,
+            "out of bounds": Infinity
+          },
+          "score": 3,
+          "time": 10121438777,
+          "relative": 3.438443214810623,
+          "calibrates": [
+            3572202,
+            3803936
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity,
+            "out of bounds": Infinity
+          },
+          "score": 3,
+          "time": 10123014738,
+          "relative": 3.3970632216825525,
+          "calibrates": [
+            3882129,
+            4232649
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "out of bounds": Infinity,
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 3,
+          "time": 10134708490,
+          "relative": 3.330609200171207,
+          "calibrates": [
+            4059226,
+            5408203
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.arraySumIsLarge:([I)V": {
+      "score": 2.0,
+      "time": 10146953340.333334,
+      "relative": 3.3275347900407675,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10164680576,
+          "relative": 3.3155442801735178,
+          "calibrates": [
+            5334342,
+            4496245
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10135053178,
+          "relative": 3.34410130211825,
+          "calibrates": [
+            4660892,
+            4517249
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10141126267,
+          "relative": 3.322958787830535,
+          "calibrates": [
+            5098630,
+            4543154
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Arrays.binarySearch:(I)V": {
+      "score": 2.0,
+      "time": 10146324264.666666,
+      "relative": 3.26339133833007,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10143533930,
+          "relative": 3.337709577673691,
+          "calibrates": [
+            4292611,
+            5029402
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10142136320,
+          "relative": 3.213311794074322,
+          "calibrates": [
+            4859542,
+            7552626
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10153302544,
+          "relative": 3.2391526432421984,
+          "calibrates": [
+            7320728,
+            4387325
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.allPrimesArePositive:(I)V": {
+      "score": 3.0,
+      "time": 10126252832.666666,
+      "relative": 3.329878702995511,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity,
+            "out of bounds": Infinity
+          },
+          "score": 3,
+          "time": 10123862692,
+          "relative": 3.331743442600221,
+          "calibrates": [
+            4457145,
+            4975485
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "out of bounds": Infinity,
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 3,
+          "time": 10124920036,
+          "relative": 3.311886076573886,
+          "calibrates": [
+            4802196,
+            5072768
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "out of bounds": Infinity,
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 3,
+          "time": 10129975770,
+          "relative": 3.346006589812426,
+          "calibrates": [
+            4547594,
+            4585792
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.callsAssertFalse:()V": {
+      "score": 1.0,
+      "time": 124564983.33333333,
+      "relative": 1.4363224878788727,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 124181705,
+          "relative": 1.411790080988629,
+          "calibrates": [
+            4773949,
+            4848764
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 126894207,
+          "relative": 1.445616995199128,
+          "calibrates": [
+            4759724,
+            4336367
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 122619038,
+          "relative": 1.451560387448861,
+          "calibrates": [
+            4332643,
+            4337525
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.callsAssertFib:(I)V": {
+      "score": 2.0,
+      "time": 10126895321.0,
+      "relative": 3.3608047486588304,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10126899621,
+          "relative": 3.3539013725981053,
+          "calibrates": [
+            4714039,
+            4252093
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10124191033,
+          "relative": 3.3585743392772462,
+          "calibrates": [
+            4364945,
+            4502857
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10129595309,
+          "relative": 3.3699385341011396,
+          "calibrates": [
+            4495418,
+            4147961
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.callsAssertIf:(Z)V": {
+      "score": 2.0,
+      "time": 128808291.33333333,
+      "relative": 1.4688169890119902,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 129630126,
+          "relative": 1.4717257515634616,
+          "calibrates": [
+            4249049,
+            4500994
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 127719441,
+          "relative": 1.4679203810175994,
+          "calibrates": [
+            4386788,
+            4310155
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 129075307,
+          "relative": 1.4668048344549103,
+          "calibrates": [
+            4383869,
+            4428006
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.callsAssertIfNested:(ZZ)V": {
+      "score": 2.0,
+      "time": 124778559.33333333,
+      "relative": 1.4631044725031177,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 125792025,
+          "relative": 1.462966064038102,
+          "calibrates": [
+            4407069,
+            4256903
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 123044905,
+          "relative": 1.4657960333803868,
+          "calibrates": [
+            4207428,
+            4212291
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 125498748,
+          "relative": 1.460551320090864,
+          "calibrates": [
+            4277715,
+            4414252
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.callsAssertIfWithTrue:()V": {
+      "score": 1.0,
+      "time": 121454576.33333333,
+      "relative": 1.4418209126686783,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 119598914,
+          "relative": 1.4401054871479553,
+          "calibrates": [
+            4334562,
+            4348077
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 121266074,
+          "relative": 1.4385001388906826,
+          "calibrates": [
+            4295262,
+            4541012
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 123498741,
+          "relative": 1.446857111967397,
+          "calibrates": [
+            4299067,
+            4528386
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Calls.callsAssertTrue:()V": {
+      "score": 1.0,
+      "time": 117352156.0,
+      "relative": 1.4445988109593515,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 118784289,
+          "relative": 1.450071376295656,
+          "calibrates": [
+            4247558,
+            4180308
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 114768396,
+          "relative": 1.4341133110352218,
+          "calibrates": [
+            4154669,
+            4293041
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 118503783,
+          "relative": 1.4496117455471773,
+          "calibrates": [
+            4236612,
+            4180255
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Dependent.badNormalizedDistance:(II)I": {
+      "score": 2.0,
+      "time": 10203690415.333334,
+      "relative": 3.350075416297035,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10210884732,
+          "relative": 3.365047318821342,
+          "calibrates": [
+            4275333,
+            4536090
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10197444908,
+          "relative": 3.3464126045707085,
+          "calibrates": [
+            4557794,
+            4627832
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "divide by zero": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10202741606,
+          "relative": 3.3387663254990554,
+          "calibrates": [
+            4436181,
+            4917457
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Dependent.divisionLoop:(I)V": {
+      "score": 2.0,
+      "time": 10172781247.0,
+      "relative": 3.2352945228914973,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10146232966,
+          "relative": 3.309385141295201,
+          "calibrates": [
+            4870986,
+            5081915
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10143544289,
+          "relative": 3.3170942957782725,
+          "calibrates": [
+            5064626,
+            4710569
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10228566486,
+          "relative": 3.0794041316010183,
+          "calibrates": [
+            4994768,
+            12044096
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Dependent.normalizedDistance:(II)I": {
+      "score": 1.0,
+      "time": 10230003702.666666,
+      "relative": 3.2489898780892723,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10326609034,
+          "relative": 3.027473132861348,
+          "calibrates": [
+            14809470,
+            4577708
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10180051422,
+          "relative": 3.349132656048286,
+          "calibrates": [
+            4750691,
+            4362014
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10183350652,
+          "relative": 3.3703638453581823,
+          "calibrates": [
+            4456445,
+            4224297
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Dependent.safeDivByN:(I)I": {
+      "score": 1.0,
+      "time": 10124583055.0,
+      "relative": 3.4026057548814443,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10133125619,
+          "relative": 3.364237934966717,
+          "calibrates": [
+            4288314,
+            4472319
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10130143044,
+          "relative": 3.389320225945851,
+          "calibrates": [
+            4676927,
+            3589643
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10110480502,
+          "relative": 3.4542591037317645,
+          "calibrates": [
+            3511703,
+            3592947
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.HardFuzzer.arrayOrder:([I)V": {
+      "score": 2.0,
+      "time": 10147928731.333334,
+      "relative": 3.2969120556423115,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "out of bounds": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10124547275,
+          "relative": 3.384996962043212,
+          "calibrates": [
+            3695955,
+            4648705
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "out of bounds": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10142154727,
+          "relative": 3.274755322659152,
+          "calibrates": [
+            4516979,
+            6257714
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "out of bounds": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10177084192,
+          "relative": 3.230983882224571,
+          "calibrates": [
+            6581450,
+            5376851
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.HardFuzzer.bigEvaluatedNumber:(I)V": {
+      "score": 1.0,
+      "time": 10144187040.333334,
+      "relative": 3.3235516758108195,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10157068940,
+          "relative": 3.277158200983876,
+          "calibrates": [
+            5920712,
+            4810288
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10135963955,
+          "relative": 3.353784679609766,
+          "calibrates": [
+            4656615,
+            4319954
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10139528226,
+          "relative": 3.3397121468388167,
+          "calibrates": [
+            4487537,
+            4787926
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.HardFuzzer.hexMagicNumber:(I)I": {
+      "score": 1.0,
+      "time": 10139800678.333334,
+      "relative": 3.3350855388136638,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10147704172,
+          "relative": 3.315203346839669,
+          "calibrates": [
+            4995609,
+            4826267
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10140410645,
+          "relative": 3.3492066027587364,
+          "calibrates": [
+            4812005,
+            4263670
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10131287218,
+          "relative": 3.3408466668425856,
+          "calibrates": [
+            4238561,
+            5005184
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.HardFuzzer.maxIntValue:(I)V": {
+      "score": 1.0,
+      "time": 10163966067.333334,
+      "relative": 3.3031926976889303,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10166225042,
+          "relative": 3.314602190981107,
+          "calibrates": [
+            4849404,
+            5004028
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10166261318,
+          "relative": 3.2945558405378614,
+          "calibrates": [
+            4907439,
+            5411509
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10159411842,
+          "relative": 3.300420061547823,
+          "calibrates": [
+            5262347,
+            4911343
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.HardFuzzer.signedOverflow:(I)V": {
+      "score": -Infinity,
+      "time": 10131888083.333334,
+      "relative": 3.354765140266702,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity,
+            "*": Infinity
+          },
+          "score": -Infinity,
+          "time": 10132760137,
+          "relative": 3.3565195099592473,
+          "calibrates": [
+            4632760,
+            4284640
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "*": Infinity,
+            "divide by zero": Infinity,
+            "ok": Infinity
+          },
+          "score": -Infinity,
+          "time": 10128354533,
+          "relative": 3.371470063716541,
+          "calibrates": [
+            4245151,
+            4366746
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "divide by zero": Infinity,
+            "*": Infinity,
+            "ok": Infinity
+          },
+          "score": -Infinity,
+          "time": 10134549580,
+          "relative": 3.3363058471243168,
+          "calibrates": [
+            4933819,
+            4410090
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.HardFuzzer.specificCombination:(III)V": {
+      "score": 2.0,
+      "time": 10436562306.333334,
+      "relative": 3.341887475085775,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10425349941,
+          "relative": 3.3520291440378887,
+          "calibrates": [
+            4407255,
+            4862996
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10458022282,
+          "relative": 3.320171969782149,
+          "calibrates": [
+            4803261,
+            5203824
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10426314696,
+          "relative": 3.3534613114372878,
+          "calibrates": [
+            4813572,
+            4427014
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Loops.forever:()V": {
+      "score": 1.0,
+      "time": 1110389765.6666667,
+      "relative": 2.3583232629254978,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 1034223640,
+          "relative": 2.351959691607549,
+          "calibrates": [
+            4508992,
+            4688825
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 1296371614,
+          "relative": 2.400018416844841,
+          "calibrates": [
+            4812539,
+            5508920
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 1000574043,
+          "relative": 2.3229916803241037,
+          "calibrates": [
+            5330869,
+            4181475
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Loops.neverAsserts:()V": {
+      "score": 1.0,
+      "time": 2330362866.6666665,
+      "relative": 2.668672267750422,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 2029429807,
+          "relative": 2.6330400598466297,
+          "calibrates": [
+            4218627,
+            5229897
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 2489249107,
+          "relative": 2.676411971150837,
+          "calibrates": [
+            5368138,
+            5119710
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 2472409686,
+          "relative": 2.6965647722538004,
+          "calibrates": [
+            4749410,
+            5195152
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Loops.neverDivides:()I": {
+      "score": 1.0,
+      "time": 2389335957.6666665,
+      "relative": 2.661130918636227,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 2423410454,
+          "relative": 2.675337387470585,
+          "calibrates": [
+            5329705,
+            4906043
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 2270904395,
+          "relative": 2.663679934495747,
+          "calibrates": [
+            4779374,
+            5073182
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "*": Infinity
+          },
+          "score": 1,
+          "time": 2473693024,
+          "relative": 2.6443754339423498,
+          "calibrates": [
+            5046654,
+            6173540
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Loops.terminates:()V": {
+      "score": 1.0,
+      "time": 143612850.66666666,
+      "relative": 1.4111168982368192,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 152622970,
+          "relative": 1.4094618322137245,
+          "calibrates": [
+            6180151,
+            5710019
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 143807311,
+          "relative": 1.4184553056401557,
+          "calibrates": [
+            5574004,
+            5399761
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 134408271,
+          "relative": 1.405433556856578,
+          "calibrates": [
+            5238122,
+            5330599
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.assertBoolean:(Z)V": {
+      "score": 2.0,
+      "time": 127956855.33333333,
+      "relative": 1.4356763151658114,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 134376302,
+          "relative": 1.4169999436138891,
+          "calibrates": [
+            5400253,
+            4888263
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 127072251,
+          "relative": 1.431499864515932,
+          "calibrates": [
+            4870882,
+            4538928
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 122422013,
+          "relative": 1.4585291373676124,
+          "calibrates": [
+            4239891,
+            4278555
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.assertFalse:()V": {
+      "score": 1.0,
+      "time": 120808700.66666667,
+      "relative": 1.4162263359889302,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 117776529,
+          "relative": 1.4033230384365665,
+          "calibrates": [
+            4216482,
+            5089575
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 122103326,
+          "relative": 1.4331521580970925,
+          "calibrates": [
+            4612871,
+            4394651
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity
+          },
+          "score": 1,
+          "time": 122546247,
+          "relative": 1.4122038114331321,
+          "calibrates": [
+            4610006,
+            4876935
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.assertInteger:(I)V": {
+      "score": 2.0,
+      "time": 10147067372.666666,
+      "relative": 3.333849613185706,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10146669202,
+          "relative": 3.30622666361971,
+          "calibrates": [
+            4895708,
+            5130272
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10152452910,
+          "relative": 3.3156502811410205,
+          "calibrates": [
+            4998703,
+            4817662
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10142080006,
+          "relative": 3.3796718947963877,
+          "calibrates": [
+            4705115,
+            3757121
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.assertPositive:(I)V": {
+      "score": 2.0,
+      "time": 10147271970.333334,
+      "relative": 3.318566588622106,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10130132886,
+          "relative": 3.3805650969393892,
+          "calibrates": [
+            3737727,
+            4697175
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10146078847,
+          "relative": 3.3291600876721636,
+          "calibrates": [
+            4683375,
+            4826354
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10165604178,
+          "relative": 3.2459745812547642,
+          "calibrates": [
+            4617364,
+            6922179
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.checkBeforeAssert:(I)V": {
+      "score": 2.0,
+      "time": 10174090232.666666,
+      "relative": 3.2651662692326897,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10200868592,
+          "relative": 3.1963944637311545,
+          "calibrates": [
+            6677790,
+            6302150
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10177377494,
+          "relative": 3.26868805869563,
+          "calibrates": [
+            6223701,
+            4740521
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10144024612,
+          "relative": 3.3304162852712835,
+          "calibrates": [
+            4966801,
+            4513541
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.checkBeforeDivideByN2:(I)I": {
+      "score": 1.0,
+      "time": 10157941074.666666,
+      "relative": 3.2996484691508403,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10142190912,
+          "relative": 3.3148664825958924,
+          "calibrates": [
+            4391284,
+            5432873
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10164435180,
+          "relative": 3.2706204538037134,
+          "calibrates": [
+            5270849,
+            5630815
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10167197132,
+          "relative": 3.3134584710529147,
+          "calibrates": [
+            5735423,
+            4144937
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.checkBeforeDivideByN:(I)I": {
+      "score": 2.0,
+      "time": 10124643869.666666,
+      "relative": 3.40804911922349,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10126645535,
+          "relative": 3.4242924947892583,
+          "calibrates": [
+            4009025,
+            3615330
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10118873944,
+          "relative": 3.433497469729481,
+          "calibrates": [
+            3567607,
+            3891120
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10128412130,
+          "relative": 3.3663573931517305,
+          "calibrates": [
+            3532813,
+            5181115
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.divideByN:(I)I": {
+      "score": 2.0,
+      "time": 10127218979.666666,
+      "relative": 3.424942491912508,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10148005085,
+          "relative": 3.3771317243686623,
+          "calibrates": [
+            4995048,
+            3521801
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10112829364,
+          "relative": 3.4451238287807975,
+          "calibrates": [
+            3632685,
+            3624678
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "divide by zero": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10120822490,
+          "relative": 3.4525719225880653,
+          "calibrates": [
+            3535332,
+            3604268
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.divideByNMinus10054203:(I)I": {
+      "score": 2.0,
+      "time": 10124905361.333334,
+      "relative": 3.418540935047227,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10119537359,
+          "relative": 3.4144455202602937,
+          "calibrates": [
+            3853283,
+            3940443
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10136562897,
+          "relative": 3.423507778891789,
+          "calibrates": [
+            3954412,
+            3691212
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 10118615828,
+          "relative": 3.417669505989598,
+          "calibrates": [
+            3998523,
+            3736856
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.divideByZero:()I": {
+      "score": 1.0,
+      "time": 103838315.33333333,
+      "relative": 1.4394313124886295,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "divide by zero": Infinity
+          },
+          "score": 1,
+          "time": 102961984,
+          "relative": 1.432672843117321,
+          "calibrates": [
+            3690534,
+            3913325
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "divide by zero": Infinity
+          },
+          "score": 1,
+          "time": 102568108,
+          "relative": 1.4358746888684981,
+          "calibrates": [
+            3769239,
+            3749892
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "divide by zero": Infinity
+          },
+          "score": 1,
+          "time": 105984854,
+          "relative": 1.4497464054800695,
+          "calibrates": [
+            3791343,
+            3734019
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.divideZeroByZero:(II)I": {
+      "score": 2.0,
+      "time": 10271194182.333334,
+      "relative": 3.4133861447135883,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "divide by zero": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10252481595,
+          "relative": 3.437157707199497,
+          "calibrates": [
+            3710188,
+            3783598
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "divide by zero": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10283513639,
+          "relative": 3.4013240684993584,
+          "calibrates": [
+            3789689,
+            4373267
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "divide by zero": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10277587313,
+          "relative": 3.4016766584419096,
+          "calibrates": [
+            3966538,
+            4185093
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.earlyReturn:()I": {
+      "score": 1.0,
+      "time": 105525970.0,
+      "relative": 1.441035977428218,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 106394232,
+          "relative": 1.433877318587557,
+          "calibrates": [
+            4168263,
+            3667310
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 105842238,
+          "relative": 1.4336763184758745,
+          "calibrates": [
+            4089456,
+            3709073
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 104341440,
+          "relative": 1.4555542952212226,
+          "calibrates": [
+            3607992,
+            3702263
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.justAdd:(II)I": {
+      "score": 1.0,
+      "time": 10265771191.0,
+      "relative": 3.4040664255866826,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10276146040,
+          "relative": 3.387093329280857,
+          "calibrates": [
+            3662358,
+            4766465
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10257001406,
+          "relative": 3.3876568788681705,
+          "calibrates": [
+            4586842,
+            3815368
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10264166127,
+          "relative": 3.4374490686110204,
+          "calibrates": [
+            3724952,
+            3772343
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.justMulitply:(II)I": {
+      "score": 1.0,
+      "time": 10267967573.333334,
+      "relative": 3.4337824526311205,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10278794300,
+          "relative": 3.434941071858726,
+          "calibrates": [
+            3642711,
+            3908752
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10264983468,
+          "relative": 3.4241016844397647,
+          "calibrates": [
+            3887260,
+            3844646
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10260124952,
+          "relative": 3.4423046015948695,
+          "calibrates": [
+            3609396,
+            3801625
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.justReturn:()I": {
+      "score": 1.0,
+      "time": 107549341.66666667,
+      "relative": 1.435820919624674,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 106585939,
+          "relative": 1.4128798147616095,
+          "calibrates": [
+            4522551,
+            3715986
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 110709452,
+          "relative": 1.456622790835612,
+          "calibrates": [
+            3875809,
+            3861535
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 105352634,
+          "relative": 1.4379601532768012,
+          "calibrates": [
+            4036390,
+            3649873
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.justReturnNothing:()V": {
+      "score": 1.0,
+      "time": 111135089.0,
+      "relative": 1.4652825976145996,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 113135838,
+          "relative": 1.4765503855344797,
+          "calibrates": [
+            3727235,
+            3825075
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 113527643,
+          "relative": 1.4785644220128573,
+          "calibrates": [
+            3754662,
+            3788739
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 106741786,
+          "relative": 1.4407329852964612,
+          "calibrates": [
+            3688294,
+            4049755
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.multiError:(Z)I": {
+      "score": 2.0,
+      "time": 125342709.66666667,
+      "relative": 1.504966929092933,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "assertion error": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 123043188,
+          "relative": 1.4813606919210998,
+          "calibrates": [
+            4039760,
+            4083435
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 117543599,
+          "relative": 1.4760550914168735,
+          "calibrates": [
+            4214691,
+            3640810
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity,
+            "divide by zero": Infinity
+          },
+          "score": 2,
+          "time": 135441342,
+          "relative": 1.5574850039408263,
+          "calibrates": [
+            3611912,
+            3892147
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Simple.onlyOneExecutionPath:(I)I": {
+      "score": 1.0,
+      "time": 10128200042.0,
+      "relative": 3.4319623351477984,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10130504989,
+          "relative": 3.435839772448188,
+          "calibrates": [
+            3789376,
+            3637759
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10122267056,
+          "relative": 3.43071862646214,
+          "calibrates": [
+            3705299,
+            3803823
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "ok": Infinity
+          },
+          "score": 1,
+          "time": 10131828081,
+          "relative": 3.429328606533067,
+          "calibrates": [
+            3862503,
+            3677807
+          ]
+        }
+      ]
+    },
+    "jpamb.cases.Tricky.collatz:(I)V": {
+      "score": 2.0,
+      "time": 10120636377.666666,
+      "relative": 3.448831334152356,
+      "iterations": [
+        {
+          "iteration": 0,
+          "response": {
+            "ok": Infinity,
+            "assertion error": Infinity
+          },
+          "score": 2,
+          "time": 10124298421,
+          "relative": 3.4508886796411082,
+          "calibrates": [
+            3547862,
+            3621925
+          ]
+        },
+        {
+          "iteration": 1,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10115714179,
+          "relative": 3.446377066751584,
+          "calibrates": [
+            3600523,
+            3637992
+          ]
+        },
+        {
+          "iteration": 2,
+          "response": {
+            "assertion error": Infinity,
+            "ok": Infinity
+          },
+          "score": 2,
+          "time": 10121896533,
+          "relative": 3.449228256064377,
+          "calibrates": [
+            3498509,
+            3697035
+          ]
+        }
+      ]
+    }
+  },
+  "score": -Infinity,
+  "time": 5937836111.169935,
+  "relative": 2.5954644722876505
+}

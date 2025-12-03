@@ -53,7 +53,7 @@ class CentralExpansionAndSyntaticAnalysisStrategy(Strategy):
         t = threading.Thread(target=fuzz_loop, args=(static_method_inputs, stop_event,))
         t.daemon = True
         t.start()
-        t.join(timeout=6)
+        t.join(timeout=10)
 
         if t.is_alive():
             stop_event.set()

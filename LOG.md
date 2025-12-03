@@ -23,3 +23,6 @@ dosn't work if random
 
 NOTE: this is with the assumption that every method are deterministic.
 If any method is non-deterministic, we need to re-run with the same input multiple times.
+
+# Count unique test cases
+`sed -E 's/[[:space:]]+\(.*\) ->/ ->/' target/stats/cases.txt | sort -u | wc -l`
