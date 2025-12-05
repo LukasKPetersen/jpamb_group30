@@ -1,6 +1,6 @@
 import random
 import threading
-from typing import Any, List
+from typing import Any, List, final
 from loguru import logger
 
 from query_used import get_static_variables_combinations, generate_every_input_combination
@@ -11,7 +11,7 @@ from jpamb.model import Input
 from central_expansion import fair_product, generators_for_method
 from static_analysis import analyze_method
 from interval_abstraction import Interval, Infinity
-
+from wager import PercentWager, Wager
 
 class FullStrategy(Strategy):
     def __init__(self, method_signature: jvm.AbsMethodID, argument: None|Input):
@@ -22,9 +22,28 @@ class FullStrategy(Strategy):
     def run(self):
         # Set of actual program execution outputs encountered (ok, divide by zero, etc.)
         outputs_encountered = set()
+        final_states = set()
         stop_event = threading.Event()
 
         def fuzz_loop(static_method_inputs: List[Input], stop_event):
+            
+            # fuzz the intervals that the unbounded static analysis found
+            # NOTE: if the intervals are too large (over THRESHOLD), we skip fuzzing the intervals
+            # and go directly to centrally expanded inputs. Because there is a good change that
+            # it is just the full range of integers. This can be improved in the future.
+            unbounded_final_states, input_intervals = analyze_method(self.method_signature.encode())
+            final_states.update(unbounded_final_states)
+            # FIXME: This should also happen first (or just earlier) because if the infinite loop
+            # has no arguments then it is still ran right now...
+            # TODO: check if this is fine
+            # if the unbounded analysis only returned "*", we know it is running forever
+            # FIXME: It fails `jpamb.cases.Calls.callsAssertFib` and is therefore disabled for now...
+            # if len(final_states) == 1 and "*" in final_states:
+            #     logger.warning("Static analysis returned only '*', indicating non-termination.")
+            #     logger.warning("Skipping interval-based input generation.")
+            #     outputs_encountered.add("*")
+            #     return
+            
             # NOTE: this is with the assumption that every method are deterministic.
             # If any method is non-deterministic, we need to re-run with the same input multiple times.
             if not self.method_signature.extension.params:
@@ -41,22 +60,6 @@ class FullStrategy(Strategy):
                 outputs_encountered.add(interpreter.run(self.method_signature, method_input, stop_event))
             
             THRESHOLD = 2000
-            # fuzz the intervals that the unbounded static analysis found
-            # NOTE: if the intervals are too large (over THRESHOLD), we skip fuzzing the intervals
-            # and go directly to centrally expanded inputs. Because there is a good change that
-            # it is just the full range of integers. This can be improved in the future.
-            final_states, input_intervals = analyze_method(self.method_signature.encode())
-
-            # FIXME: This should also happen first (or just earlier) because if the infinite loop
-            # has no arguments then it is still ran right now...
-            # TODO: check if this is fine
-            # if the unbounded analysis only returned "*", we know it is running forever
-            # FIXME: It fails `jpamb.cases.Calls.callsAssertFib` and is therefore disabled for now...
-            # if len(final_states) == 1 and "*" in final_states:
-            #     logger.warning("Static analysis returned only '*', indicating non-termination.")
-            #     logger.warning("Skipping interval-based input generation.")
-            #     outputs_encountered.add("*")
-            #     return
 
             is_interval_exceeding_threshold = False
             is_argument_type_supported = True
@@ -117,13 +120,22 @@ class FullStrategy(Strategy):
             stop_event.set()
             t.join()
 
+        percent_wager = PercentWager()
+        wager = Wager()
+        # Adjust wager based on outputs encountered
+        for end_state in final_states:
+            percent_wager.set_value(end_state, 0.7)
+            wager.set_value(end_state, 10)
+            
         for output in outputs_encountered:
             if output == "not done":
                 continue
-            # if output == "*":
-            #     # print(f"{output};50%")
-            #     continue
-            print(f"{output};100%")
+            percent_wager.set_value(output, 1.0)
+            wager.set_value(output, 10000)
+          
+        percent_wager.print_wager()
+        # wager.print_wager()
+          
         exit(0)
 
 class FullFuzzer(Fuzzer):

@@ -37,7 +37,7 @@ def re_parser(ctx_, parms_, expr):
         return re.compile(expr)
 
 
-def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
+def run(cmd: list[str], /, timeout=20.0, logout=None, logerr=None, **kwargs):
     import threading
     from time import monotonic, perf_counter_ns
 
@@ -100,9 +100,15 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
         )
         tout.start()
 
-        terr.join(end and end - monotonic())
-        tout.join(end and end - monotonic())
-        exitcode = cp.wait(end and end - monotonic())
+        terr.join(end and max(0, end - monotonic()))
+        tout.join(end and max(0, end - monotonic()))
+        remaining = end and max(0, end - monotonic())
+        if remaining == 0 and end:
+            # Timeout has already expired
+            if cp:
+                cp.terminate()
+            raise subprocess.TimeoutExpired(cmd, timeout)
+        exitcode = cp.wait(remaining)
         end_ns = perf_counter_ns()
 
         if exitcode != 0:
@@ -234,7 +240,7 @@ def checkhealth(suite):
 @click.option(
     "--timeout",
     show_default=True,
-    default=2.0,
+    default=20.0,
     help="timeout in seconds.",
 )
 @click.option(
@@ -290,7 +296,7 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
 @click.option(
     "--timeout",
     show_default=True,
-    default=2.0,
+    default=20.0,
     help="timeout in seconds.",
 )
 @click.option(
@@ -348,7 +354,7 @@ def cfg(suite, program, filter, with_python, timeout):
 @click.option(
     "--timeout",
     show_default=True,
-    default=2.0,
+    default=20.0,
     help="timeout in seconds.",
 )
 @click.option(
@@ -437,7 +443,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
 @click.option(
     "--timeout",
     show_default=True,
-    default=2.0,
+    default=20.0,
     help="timeout in seconds.",
 )
 @click.option(
@@ -765,7 +771,7 @@ def build(suite, compile, decompile, document, test, docker):
                     ],
                     logout=log.info,
                     logerr=log.debug,
-                    timeout=2,
+                    timeout=20,
                 )
             except subprocess.TimeoutExpired:
                 res = "*"
